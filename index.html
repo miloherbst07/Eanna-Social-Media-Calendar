@@ -492,7 +492,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     <details class="block rem" id="missingblock"></details>
 
     <div class="block">
-      <div class="block-head"><h3>By platform</h3><span class="spacer"></span><span class="hint">For the period and categories picked above</span></div>
+      <div class="block-head"><h3>By platform</h3><span class="spacer"></span><span class="hint">Averages only use posts with views logged</span></div>
       <div class="tablewrap" id="byplat"></div>
     </div>
 
@@ -1118,7 +1118,8 @@ function statItems(){
   const[f,t]=statRange();
   return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
 }
-function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
+function avgViews(s){return s.logged?fmt(Math.round(s.views/s.logged)):"–"}
+function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={logged:list.filter(it=>mval(it,"views",plat)!==null).length,posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
 function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
 function groupKey(ds){
   if(stat.group==="month")return ds.slice(0,7);
@@ -1178,11 +1179,11 @@ function renderStats(){
   const prow=PLATFORMS.map(p=>{const on=plist.filter(it=>(it.platforms||[]).includes(p.id)||hasPlat(it,p.id));return{p,s:sumOf(on,p.id)}});
   const leg=plist.filter(hasLegacy);const legS=sumOf(leg,"");
   const ptot={views:0,saves:0,shares:0,follows:0};prow.forEach(r=>METRICS.forEach(k=>ptot[k]+=r.s[k]));if(leg.length)METRICS.forEach(k=>ptot[k]+=legS[k]);
-  const pcell=(s,posts)=>`<td class="num">${fmt(posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(s[k])}</td>`).join("")}<td class="num">${posts&&s.views?fmt(Math.round(s.views/posts)):"–"}</td>`;
+  const pcell=(s,posts)=>`<td class="num">${fmt(posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(s[k])}</td>`).join("")}<td class="num">${avgViews(s)}</td>`;
   $("#byplat").innerHTML=plist.length?`<table class="data"><thead><tr><th>Platform</th><th class="num">Posts</th><th class="num">Views</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Follows</th><th class="num">Avg views</th></tr></thead><tbody>
     ${prow.map(r=>`<tr class="click${stat.plat===r.p.id?" sel":""}" data-plat="${r.p.id}"><td><span class="catcell"><i style="background:${r.p.color};border-radius:50%"></i>${r.p.name}</span></td>${pcell(r.s,r.s.posts)}</tr>`).join("")}
     ${leg.length?`<tr><td><span class="catcell"><i style="background:#9AA0C8;border-radius:50%"></i>Earlier, not split</span></td>${pcell(legS,leg.length)}</tr>`:""}
-    <tr class="total"><td>All platforms</td><td class="num">${fmt(sumOf(plist,"").posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(ptot[k])}</td>`).join("")}<td class="num">${sumOf(plist,"").posts&&ptot.views?fmt(Math.round(ptot.views/sumOf(plist,"").posts)):"–"}</td></tr></tbody></table>${plist.some(it=>PLATFORMS.some(p=>isDP(it,p.id)))?`<p class="foot">Posts count only where it actually went up. Didn't-post entries are left out.</p>`:""}`
+    <tr class="total"><td>All platforms</td><td class="num">${fmt(sumOf(plist,"").posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(ptot[k])}</td>`).join("")}<td class="num">${avgViews(sumOf(plist,""))}</td></tr></tbody></table>${plist.some(it=>PLATFORMS.some(p=>isDP(it,p.id)))?`<p class="foot">Posts count only where it actually went up. Didn't-post entries are left out.</p>`:""}`
     :`<div class="empty">No posts in this period yet.</div>`;
   $("#byplat").querySelectorAll("[data-plat]").forEach(r=>r.onclick=()=>{stat.plat=stat.plat===r.dataset.plat?"":r.dataset.plat;renderStats()});
   $("#bycathint").textContent=stat.plat?platById(stat.plat).name+" only":"All platforms added together";
@@ -1193,8 +1194,8 @@ function renderStats(){
   const unc=list.filter(it=>!catById(it.category));if(unc.length)rows.push({c:{name:"No category",color:"#9AA0C8"},s:sumOf(unc)});
   rows.sort((a,b)=>b.s.views-a.s.views);
   $("#bycat").innerHTML=list.length?`<table class="data"><thead><tr><th>Category</th><th class="num">Posts</th><th class="num">Views</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Follows</th><th class="num">Avg views</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr><td><span class="catcell"><i style="background:${esc(r.c.color)}"></i>${esc(r.c.name)}</span></td><td class="num">${fmt(r.s.posts)}</td><td class="num">${fmt(r.s.views)}</td><td class="num">${fmt(r.s.saves)}</td><td class="num">${fmt(r.s.shares)}</td><td class="num">${fmt(r.s.follows)}</td><td class="num">${r.s.posts?fmt(Math.round(r.s.views/r.s.posts)):"–"}</td></tr>`).join("")}
-    <tr class="total"><td>Total</td><td class="num">${fmt(tot.posts)}</td><td class="num">${fmt(tot.views)}</td><td class="num">${fmt(tot.saves)}</td><td class="num">${fmt(tot.shares)}</td><td class="num">${fmt(tot.follows)}</td><td class="num">${tot.posts?fmt(Math.round(tot.views/tot.posts)):"–"}</td></tr></tbody></table>`
+    ${rows.map(r=>`<tr><td><span class="catcell"><i style="background:${esc(r.c.color)}"></i>${esc(r.c.name)}</span></td><td class="num">${fmt(r.s.posts)}</td><td class="num">${fmt(r.s.views)}</td><td class="num">${fmt(r.s.saves)}</td><td class="num">${fmt(r.s.shares)}</td><td class="num">${fmt(r.s.follows)}</td><td class="num">${avgViews(r.s)}</td></tr>`).join("")}
+    <tr class="total"><td>Total</td><td class="num">${fmt(tot.posts)}</td><td class="num">${fmt(tot.views)}</td><td class="num">${fmt(tot.saves)}</td><td class="num">${fmt(tot.shares)}</td><td class="num">${fmt(tot.follows)}</td><td class="num">${avgViews(tot)}</td></tr></tbody></table>`
     :`<div class="empty">No posts in this period yet.</div>`;
 
   // Over time
