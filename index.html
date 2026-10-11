@@ -292,7 +292,7 @@ table.data .ttl{max-width:280px;overflow:hidden;text-overflow:ellipsis}
 .readyseg button[data-v="yes"][aria-pressed="true"]{border-color:var(--ready);background:color-mix(in srgb,var(--ready) 18%,var(--surface))}
 .statgrid{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .pgrid{grid-column:1/-1;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.prow{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr));gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+.prow{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr)) 46px;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
 .prow:last-child{border-bottom:0}
 .prow.head{background:var(--surface-2);font-size:12.5px;font-weight:600;color:var(--muted);padding:7px 10px}
 .prow.tot{background:color-mix(in srgb,var(--orange) 9%,var(--surface));font-weight:700}
@@ -303,6 +303,27 @@ table.data .ttl{max-width:280px;overflow:hidden;text-overflow:ellipsis}
 .pab{display:none}
 .legacy{grid-column:1/-1;font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:9px 12px}
 .mpost{padding:12px 0;border-bottom:1px solid var(--line)}
+.dpbtn{border:1.5px solid var(--line-strong);background:var(--surface);color:var(--muted);border-radius:8px;padding:6px 0;font-weight:700;font-size:12.5px;width:100%}
+.dpbtn:hover{border-color:var(--navy);color:var(--ink)}
+.dpbtn[aria-pressed="true"]{background:#5E6389;border-color:#5E6389;color:#fff}
+.prow.isdp input{opacity:.35}
+.prow.isdp .pname::after{content:"*";color:var(--orange);margin-left:2px}
+.prow.head span:last-child{text-align:center}
+.star{color:var(--orange);font-weight:700}
+.foot{margin:10px 2px 0;font-size:12.5px;color:var(--muted)}
+.foot .star{margin-right:3px}
+details.rem{padding:0;border:1.5px solid var(--todo);background:color-mix(in srgb,var(--todo) 7%,var(--surface))}
+details.rem>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;font-weight:700;font-size:16px}
+details.rem>summary::-webkit-details-marker{display:none}
+details.rem>summary .tri{display:inline-block;transition:transform .15s;color:var(--muted);font-size:13px}
+details.rem[open]>summary .tri{transform:rotate(180deg)}
+details.rem>summary .cnt{background:var(--todo);color:#15173D;font-size:12px;padding:1px 9px;border-radius:99px}
+details.rem>summary .hint{font-weight:400;margin-left:auto}
+details.rem .rem-body{padding:0 16px 12px}
+@media (prefers-reduced-motion:reduce){details.rem>summary .tri{transition:none}}
+.slots{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.slots .btn{padding:5px 10px;font-size:13px}
+.slots .btn[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
 .mpost:last-of-type{border-bottom:0}
 .mpost-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .mpost-head strong{border-left:4px solid var(--c);padding-left:8px}
@@ -355,7 +376,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   .mini{padding:8px}
   .modal-body{grid-template-columns:1fr}
   .statgrid{grid-template-columns:repeat(2,1fr)}
-  .prow{grid-template-columns:44px repeat(4,minmax(0,1fr));gap:5px;padding:7px 8px}
+  .prow{grid-template-columns:40px repeat(4,minmax(0,1fr)) 38px;gap:5px;padding:7px 8px}
   .prow.head{font-size:11px}
   .pname{font-size:12.5px}
   .pfull{display:none}
@@ -467,8 +488,8 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     </div>
     <div class="filters" id="sfilters"></div>
 
-    <div class="block missing" id="missingblock"></div>
     <div class="tiles" id="tiles"></div>
+    <details class="block rem" id="missingblock"></details>
 
     <div class="block">
       <div class="block-head"><h3>By platform</h3><span class="spacer"></span><span class="hint">For the period and categories picked above</span></div>
@@ -564,7 +585,13 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
           <button class="btn ghost" type="button" id="e-cleardate">Clear</button>
         </div>
       </div>
-      <div><label class="f" for="e-time">Post time</label><input type="time" id="e-time"></div>
+      <div><label class="f" for="e-time">Post time</label><input type="time" id="e-time">
+        <div class="slots" id="e-slots">
+          <button class="btn" type="button" data-slot="morning">Morning</button>
+          <button class="btn" type="button" data-slot="afternoon">Afternoon</button>
+          <button class="btn" type="button" data-slot="evening">Evening</button>
+          <button class="btn ghost" type="button" id="e-cleartime">Clear</button>
+        </div></div>
       <div class="full"><label class="f">Posting on</label><div class="toggles" id="e-plats"></div></div>
       <div class="full"><label class="f" for="e-link">Video or file link</label>
         <div class="linkrow"><input type="url" id="e-link" placeholder="Paste a Google Drive, Dropbox, Frame.io or YouTube link"><a class="btn" id="e-open" target="_blank" rel="noopener">Open</a></div></div>
@@ -574,7 +601,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <div><label class="f" for="e-players">Players featured</label><input type="text" id="e-players" placeholder="Names, comma separated"></div>
       <div class="full"><label class="f" for="e-caption">Caption</label><textarea id="e-caption" rows="3" placeholder="Draft caption and hashtags"></textarea></div>
       <div class="full"><label class="f" for="e-notes">Notes</label><textarea id="e-notes" rows="3" placeholder="Shot list, music, reminders"></textarea></div>
-      <div class="sec">Results <span>Add each platform's numbers once it's been up a while. The total adds up automatically.</span></div>
+      <div class="sec">Results <span>Add each platform's numbers once it's been up a while. Tap DP if it didn't go up on that platform.</span></div>
       <div class="legacy" id="e-legacy" hidden></div>
       <div class="pgrid" id="e-pgrid"></div>
     </div>
@@ -681,8 +708,20 @@ function textOn(hex){
 }
 function num(v){return (v===""||v==null||isNaN(+v))?null:+v}
 /* Per-platform stats live in it.pstats[platform][metric]. Older posts may have one combined number in it.views etc. */
-function pval(it,p,k){return num(it.pstats&&it.pstats[p]&&it.pstats[p][k])}
-function hasPlat(it,p){return METRICS.some(k=>pval(it,p,k)!==null)}
+function isDP(it,p){return !!(it.pstats&&it.pstats[p]&&it.pstats[p].dp)}
+function pval(it,p,k){return isDP(it,p)?null:num(it.pstats&&it.pstats[p]&&it.pstats[p][k])}
+function hasNums(it,p){return METRICS.some(k=>pval(it,p,k)!==null)}
+function hasPlat(it,p){return hasNums(it,p)||isDP(it,p)}
+function allDP(it){const pl=postPlats(it);return pl.length>0&&pl.every(p=>isDP(it,p))}
+const SLOTS={morning:{name:"Morning",t:"09:00"},afternoon:{name:"Afternoon",t:"13:00"},evening:{name:"Evening",t:"18:00"}};
+function timeLabel(it){return it.time||(SLOTS[it.slot]?SLOTS[it.slot].name:"")}
+function sortTime(it){return it.time||(SLOTS[it.slot]?SLOTS[it.slot].t:"99")}
+/* Results reminder is due 24 hours after the post time; with no time set, from the start of the next day. */
+function dueAt(it){
+  const d=parseYmd(it.date);const t=it.time||(SLOTS[it.slot]?SLOTS[it.slot].t:"");
+  if(t){const [hh,mm]=t.split(":").map(Number);d.setHours(hh||0,mm||0,0,0);return new Date(d.getTime()+864e5)}
+  return addDays(d,1);
+}
 function hasSplit(it){return PLATFORMS.some(p=>hasPlat(it,p.id))}
 function hasLegacy(it){return !hasSplit(it)&&METRICS.some(k=>num(it[k])!==null)}
 function hasStats(it){return hasSplit(it)||hasLegacy(it)}
@@ -695,11 +734,19 @@ function postPlats(it){const p=(it.platforms||[]).filter(id=>PLATFORMS.some(x=>x
 function missingPlats(it){const p=(it.platforms||[]).filter(id=>PLATFORMS.some(x=>x.id===id));return p.length?p.filter(id=>!hasPlat(it,id)):(hasStats(it)?[]:["?"])}
 const platById=id=>PLATFORMS.find(p=>p.id===id);
 function pgridHTML(rows,vals,withTotal){
-  return `<div class="prow head"><span>Platform</span>${METRICS.map(k=>`<span>${METRIC_NAMES[k]}</span>`).join("")}</div>`+
-    rows.map(id=>{const p=platById(id);return `<div class="prow" data-p="${id}"><span class="pname"><i class="pdot" style="background:${p.color}"></i><span class="pfull">${p.name}</span><span class="pab">${p.ab}</span></span>${METRICS.map(k=>{const v=vals&&vals[id]?num(vals[id][k]):null;return `<input type="number" min="0" inputmode="numeric" data-k="${k}" value="${v===null?"":v}" aria-label="${p.name} ${METRIC_NAMES[k]}">`}).join("")}</div>`}).join("")+
-    (withTotal?`<div class="prow tot"><span class="pname">Total</span>${METRICS.map(k=>`<span class="v" data-t="${k}">0</span>`).join("")}</div>`:"");
+  return `<div class="prow head"><span>Platform</span>${METRICS.map(k=>`<span>${METRIC_NAMES[k]}</span>`).join("")}<span title="Didn't post">DP</span></div>`+
+    rows.map(id=>{const p=platById(id);const dp=!!(vals&&vals[id]&&vals[id].dp);return `<div class="prow${dp?" isdp":""}" data-p="${id}"><span class="pname"><i class="pdot" style="background:${p.color}"></i><span class="pfull">${p.name}</span><span class="pab">${p.ab}</span></span>${METRICS.map(k=>{const v=!dp&&vals&&vals[id]?num(vals[id][k]):null;return `<input type="number" min="0" inputmode="numeric" data-k="${k}" value="${v===null?"":v}" ${dp?"disabled":""} aria-label="${p.name} ${METRIC_NAMES[k]}">`}).join("")}<button type="button" class="dpbtn" aria-pressed="${dp}" title="Didn't post on ${p.name}" aria-label="Didn't post on ${p.name}">DP</button></div>`}).join("")+
+    (withTotal?`<div class="prow tot"><span class="pname">Total</span>${METRICS.map(k=>`<span class="v" data-t="${k}">0</span>`).join("")}<span></span></div>`:"");
 }
-function readPgrid(root){const out={};root.querySelectorAll(".prow[data-p]").forEach(r=>{const o={};r.querySelectorAll("input").forEach(i=>o[i.dataset.k]=num(i.value));if(METRICS.some(k=>o[k]!==null))out[r.dataset.p]=o});return out}
+function wireDP(root,onChange){
+  root.querySelectorAll(".prow[data-p] .dpbtn").forEach(b=>b.onclick=()=>{
+    const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);
+    const row=b.closest(".prow");row.classList.toggle("isdp",on);row.querySelectorAll("input").forEach(i=>{i.disabled=on});
+    if(onChange)onChange();
+  });
+}
+function readRow(r){if(r.querySelector('.dpbtn[aria-pressed="true"]'))return{dp:true};const o={};r.querySelectorAll("input").forEach(i=>o[i.dataset.k]=num(i.value));return o}
+function readPgrid(root){const out={};root.querySelectorAll(".prow[data-p]").forEach(r=>{const o=readRow(r);if(o.dp||METRICS.some(k=>o[k]!==null))out[r.dataset.p]=o});return out}
 
 /* ---------- Firebase ---------- */
 const firebaseConfig={
@@ -844,7 +891,7 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
 function renderAll(){renderFilters();renderCalendar();renderBoard();renderBank();renderStats();renderSettings()}
 function visibleDated(){return Object.values(items).filter(it=>it.date&&!hiddenCats.has(it.category||"none"))}
 function itemsOn(ds){
-  return visibleDated().filter(it=>it.date===ds).sort((a,b)=>(a.time||"99").localeCompare(b.time||"99")||(a.created||0)-(b.created||0));
+  return visibleDated().filter(it=>it.date===ds).sort((a,b)=>sortTime(a).localeCompare(sortTime(b))||(a.created||0)-(b.created||0));
 }
 function chipsHTML(hidden){
   return settings.categories.map(c=>`<button class="chip" data-cat="${c.id}" aria-pressed="${!hidden.has(c.id)}" style="--cc:${esc(c.color)}"><i></i>${esc(c.name)}</button>`).join("");
@@ -865,7 +912,7 @@ function whoHTML(it){
 }
 function cardHTML(it){
   return `<div class="card" role="button" tabindex="0" ${TOUCH?"":'draggable="true"'} data-id="${it.id}" style="--c:${esc(catColor(it))}">
-    <span class="t">${readyBtn(it)}<span class="tt">${it.time?esc(it.time)+" · ":""}${esc(it.title||"Untitled")}</span></span>
+    <span class="t">${readyBtn(it)}<span class="tt">${timeLabel(it)?esc(timeLabel(it))+" · ":""}${esc(it.title||"Untitled")}</span></span>
     <span class="m">${stagePill(stById(it.status))}${platsHTML(it)}${it.link?'<span class="linkmark" title="Has a link">▶</span>':""}${whoHTML(it)}</span>
   </div>`;
 }
@@ -924,7 +971,7 @@ function dayHTML(){
     const ppl=[["Working on",it.workingOn],["Edited by",it.editedBy],["Done by",it.doneBy]].filter(x=>personById(x[1])).map(x=>`<span>${x[0]}: <strong>${esc(personById(x[1]).name)}</strong></span>`).join("");
     const st=hasStats(it)?`<span>${fmt(mval(it,"views"))} views · ${fmt(mval(it,"saves"))} saves · ${fmt(mval(it,"shares"))} shares · ${fmt(mval(it,"follows"))} follows</span>`:"";
     return `<div class="dcard" role="button" tabindex="0" data-id="${it.id}" style="--c:${esc(catColor(it))}">
-      <h4>${readyBtn(it)}${it.time?esc(it.time)+" · ":""}${esc(it.title||"Untitled")}</h4>
+      <h4>${readyBtn(it)}${timeLabel(it)?esc(timeLabel(it))+" · ":""}${esc(it.title||"Untitled")}</h4>
       <div class="row">${c?`<strong style="color:var(--ink)">${esc(c.name)}</strong>`:""}${stagePill(stById(it.status))}${platsHTML(it)}${ppl}${it.players?`<span>Featuring ${esc(it.players)}</span>`:""}${it.link?'<span class="linkmark">▶ Link attached</span>':""}${st}</div>
       ${it.notes?`<div class="notes">${esc(it.notes)}</div>`:""}</div>`}).join("")}
     <button class="btn" data-new="${ds}" style="margin-top:6px">Add another post</button></div>`;
@@ -1041,7 +1088,7 @@ function renderBoard(){
 }
 function blankItem(extra){
   return Object.assign({id:uid("it"),title:"",category:(settings.categories[0]||{}).id||"",status:(settings.statuses[0]||{}).id||"",
-    date:"",time:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",players:"",caption:"",notes:"",
+    date:"",time:"",slot:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",players:"",caption:"",notes:"",
     views:null,saves:null,shares:null,follows:null,pstats:{},created:Date.now(),updated:Date.now()},extra||{});
 }
 function renderBank(){
@@ -1071,7 +1118,7 @@ function statItems(){
   const[f,t]=statRange();
   return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
 }
-function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={posts:list.length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
+function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
 function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
 function groupKey(ds){
   if(stat.group==="month")return ds.slice(0,7);
@@ -1092,28 +1139,34 @@ function renderStats(){
   document.querySelectorAll("#sgroup button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===stat.group));
   document.querySelectorAll("#smetric button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===stat.metric));
 
-  // Missing stats: past posts with no numbers, or a platform it went out on that has no numbers yet
-  const today=todayStr();
-  const missing=Object.values(items).filter(it=>it.date&&it.date<=today&&missingPlats(it).length).sort((a,b)=>b.date.localeCompare(a.date));
+  // Reminders: only once 24 hours have passed since it went up (or from the next day if no time was set)
+  const now=new Date();
+  const missing=Object.values(items).filter(it=>it.date&&now>=dueAt(it)&&missingPlats(it).length).sort((a,b)=>b.date.localeCompare(a.date));
   const mb=$("#missingblock");
-  if(!missing.length){mb.style.display="none"}
+  if(!missing.length){mb.style.display="none";mb.innerHTML=""}
   else{
     mb.style.display="";
-    mb.innerHTML=`<div class="block-head"><h3><span class="rd no" style="width:22px;height:22px">${CLOCK}</span> ${missing.length} post${missing.length>1?"s":""} need${missing.length>1?"":"s"} results</h3><span class="spacer"></span><span class="hint">Fill in what you have and tap Save</span></div>
+    const typing=mb.contains(document.activeElement)&&document.activeElement.tagName==="INPUT";
+    if(!typing){
+    mb.innerHTML=`<summary><span class="tri" aria-hidden="true">▼</span>Reminders <span class="cnt">${missing.length}</span><span class="hint">Posts that need their results added</span></summary>
+      <div class="rem-body">
       ${missing.slice(0,15).map(it=>{
         const miss=missingPlats(it);const rows=miss[0]==="?"?PLATFORMS.map(p=>p.id):miss;
         const label=miss[0]==="?"?"No platforms picked yet":"Missing: "+miss.map(id=>platById(id).name).join(", ");
+        const tl=timeLabel(it);
         return `<div class="mpost" data-m="${it.id}" style="--c:${esc(catColor(it))}">
-          <div class="mpost-head"><strong>${esc(it.title||"Untitled")}</strong><small>${shortDate(it.date)}${(catById(it.category)||{}).name?" · "+esc(catById(it.category).name):""}</small><span class="need">${label}</span><button class="btn primary">Save</button></div>
+          <div class="mpost-head"><strong>${esc(it.title||"Untitled")}</strong><small>${shortDate(it.date)}${tl?" · "+esc(tl):""}${(catById(it.category)||{}).name?" · "+esc(catById(it.category).name):""}</small><span class="need">${label}</span><button class="btn primary">Save</button></div>
           <div class="pgrid">${pgridHTML(rows,it.pstats,false)}</div></div>`}).join("")}
-      ${missing.length>15?`<p class="hint" style="margin:10px 0 0">Showing the 15 most recent.</p>`:""}`;
-    mb.querySelectorAll(".mpost[data-m]").forEach(r=>r.querySelector(".btn").onclick=()=>{
+      ${missing.length>15?`<p class="hint" style="margin:10px 0 0">Showing the 15 most recent.</p>`:""}
+      <p class="foot">Tap <strong>DP</strong> if it didn't go up on that platform. It shows as <span class="star">*</span> in your stats.</p></div>`;
+    mb.querySelectorAll(".mpost[data-m]").forEach(r=>{wireDP(r);r.querySelector(".btn").onclick=()=>{
       const it=items[r.dataset.m];if(!it)return;const add=readPgrid(r);
-      if(!Object.keys(add).length){toast("Enter at least one number first.");return}
+      if(!Object.keys(add).length){toast("Enter a number or tap DP first.");return}
       const pstats=Object.assign({},it.pstats||{},add);const up={pstats,updated:Date.now()};
       if(hasLegacy(it))METRICS.forEach(k=>up[k]=null);
       persistItem(Object.assign({},it,up));renderAll();toast("Results saved");
-    });
+    }});
+    }
   }
 
   const list=statItems();const tot=sumOf(list);
@@ -1129,7 +1182,7 @@ function renderStats(){
   $("#byplat").innerHTML=plist.length?`<table class="data"><thead><tr><th>Platform</th><th class="num">Posts</th><th class="num">Views</th><th class="num">Saves</th><th class="num">Shares</th><th class="num">Follows</th><th class="num">Avg views</th></tr></thead><tbody>
     ${prow.map(r=>`<tr class="click${stat.plat===r.p.id?" sel":""}" data-plat="${r.p.id}"><td><span class="catcell"><i style="background:${r.p.color};border-radius:50%"></i>${r.p.name}</span></td>${pcell(r.s,r.s.posts)}</tr>`).join("")}
     ${leg.length?`<tr><td><span class="catcell"><i style="background:#9AA0C8;border-radius:50%"></i>Earlier, not split</span></td>${pcell(legS,leg.length)}</tr>`:""}
-    <tr class="total"><td>All platforms</td><td class="num">${fmt(plist.length)}</td>${METRICS.map(k=>`<td class="num">${fmt(ptot[k])}</td>`).join("")}<td class="num">${plist.length&&ptot.views?fmt(Math.round(ptot.views/plist.length)):"–"}</td></tr></tbody></table>`
+    <tr class="total"><td>All platforms</td><td class="num">${fmt(sumOf(plist,"").posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(ptot[k])}</td>`).join("")}<td class="num">${sumOf(plist,"").posts&&ptot.views?fmt(Math.round(ptot.views/sumOf(plist,"").posts)):"–"}</td></tr></tbody></table>${plist.some(it=>PLATFORMS.some(p=>isDP(it,p.id)))?`<p class="foot">Posts count only where it actually went up. Didn't-post entries are left out.</p>`:""}`
     :`<div class="empty">No posts in this period yet.</div>`;
   $("#byplat").querySelectorAll("[data-plat]").forEach(r=>r.onclick=()=>{stat.plat=stat.plat===r.dataset.plat?"":r.dataset.plat;renderStats()});
   $("#bycathint").textContent=stat.plat?platById(stat.plat).name+" only":"All platforms added together";
@@ -1154,12 +1207,12 @@ function renderStats(){
   let cols,cval,tval;
   if(byPlat){
     cols=PLATFORMS.filter(p=>tlist.some(it=>(it.platforms||[]).includes(p.id)||hasPlat(it,p.id))).map(p=>({name:p.name,color:p.color,round:true,id:p.id}));
-    cval=(arr,c)=>{const on=arr.filter(it=>(it.platforms||[]).includes(c.id)||hasPlat(it,c.id));return mk==="posts"?on.length:sumOf(on,c.id)[mk]};
-    tval=arr=>mk==="posts"?arr.length:cols.reduce((a,c)=>a+cval(arr,c),0)+sumOf(arr.filter(hasLegacy),"")[mk];
+    cval=(arr,c)=>{const on=arr.filter(it=>(it.platforms||[]).includes(c.id)||hasPlat(it,c.id));return sumOf(on,c.id)[mk]};
+    tval=arr=>mk==="posts"?sumOf(arr,"").posts:cols.reduce((a,c)=>a+cval(arr,c),0)+sumOf(arr.filter(hasLegacy),"")[mk];
   }else{
     cols=cats.filter(c=>tlist.some(it=>it.category===c.id)).map(c=>({name:c.name,color:c.color,id:c.id}));
-    cval=(arr,c)=>{const on=arr.filter(it=>it.category===c.id);return mk==="posts"?on.length:sumOf(on)[mk]};
-    tval=arr=>mk==="posts"?arr.length:sumOf(arr)[mk];
+    cval=(arr,c)=>sumOf(arr.filter(it=>it.category===c.id))[mk];
+    tval=arr=>sumOf(arr)[mk];
   }
   $("#bytime").innerHTML=keys.length?`<table class="data"><thead><tr><th>${stat.group==="month"?"Month":"Week"}</th>${cols.map(c=>`<th class="num"><span class="catcell"><i style="background:${esc(c.color)}${c.round?";border-radius:50%":""}"></i>${esc(c.name)}</span></th>`).join("")}<th class="num">Total ${METRIC_NAMES[mk].toLowerCase()}</th></tr></thead><tbody>
     ${keys.map(k=>`<tr><td>${groupLabel(k)}</td>${cols.map(c=>`<td class="num">${fmt(cval(groups[k],c))}</td>`).join("")}<td class="num"><strong>${fmt(tval(groups[k]))}</strong></td></tr>`).join("")}
@@ -1176,17 +1229,20 @@ function renderStats(){
     else{x=mval(a,s.key,stat.plat);y=mval(b,s.key,stat.plat);if(x===null)return 1;if(y===null)return -1}
     return (x<y?-1:x>y?1:0)*s.dir;
   });
+  let anyStar=false;
   const th=(k,l,n)=>`<th class="sortable${n?" num":""}" data-sort="${k}">${l}${s.key===k?` <span class="arr">${s.dir>0?"↑":"↓"}</span>`:""}</th>`;
   $("#allposts").innerHTML=sorted.length?`<table class="data"><thead><tr>${th("date","Date")}${th("title","Post")}${th("category","Category")}<th>On</th>${th("views","Views",1)}${th("saves","Saves",1)}${th("shares","Shares",1)}${th("follows","Follows",1)}</tr></thead><tbody>
     ${sorted.map(it=>{const c=catById(it.category);const pl=postPlats(it);const canX=!stat.plat&&pl.length>0;const isOpen=canX&&stat.open.has(it.id);
-      const main=`<tr class="click" data-open="${it.id}"><td>${canX?`<button class="xbtn" data-x="${it.id}" aria-label="Show each platform" aria-expanded="${isOpen}">${isOpen?"▾":"▸"}</button>`:""}${shortDate(it.date)}</td><td class="ttl"><strong>${esc(it.title||"Untitled")}</strong></td><td>${c?`<span class="catcell"><i style="background:${esc(c.color)}"></i>${esc(c.name)}</span>`:"–"}</td><td>${platsHTML(it)||"–"}</td>${METRICS.map(k=>{const v=mval(it,k,stat.plat);return `<td class="num">${v===null?'<span class="hint">–</span>':fmt(v)}</td>`}).join("")}</tr>`;
-      const subs=isOpen?pl.map(id=>{const p=platById(id);return `<tr class="sub"><td colspan="4"><span class="catcell"><i style="background:${p.color};border-radius:50%"></i>${p.name}</span></td>${METRICS.map(k=>{const v=pval(it,id,k);return `<td class="num">${v===null?"–":fmt(v)}</td>`}).join("")}</tr>`}).join("")+(hasLegacy(it)?`<tr class="sub"><td colspan="4">Earlier, not split</td>${METRICS.map(k=>`<td class="num">${num(it[k])===null?"–":fmt(it[k])}</td>`).join("")}</tr>`:""):"";
-      return main+subs}).join("")}</tbody></table>`
+      const main=`<tr class="click" data-open="${it.id}"><td>${canX?`<button class="xbtn" data-x="${it.id}" aria-label="Show each platform" aria-expanded="${isOpen}">${isOpen?"▾":"▸"}</button>`:""}${shortDate(it.date)}</td><td class="ttl"><strong>${esc(it.title||"Untitled")}</strong></td><td>${c?`<span class="catcell"><i style="background:${esc(c.color)}"></i>${esc(c.name)}</span>`:"–"}</td><td>${platsHTML(it)||"–"}</td>${METRICS.map(k=>{const v=mval(it,k,stat.plat);const star=v===null&&(stat.plat?isDP(it,stat.plat):allDP(it));if(star)anyStar=true;return `<td class="num">${star?'<span class="star">*</span>':v===null?'<span class="hint">–</span>':fmt(v)}</td>`}).join("")}</tr>`;
+      const subs=isOpen?pl.map(id=>{const p=platById(id);return `<tr class="sub"><td colspan="4"><span class="catcell"><i style="background:${p.color};border-radius:50%"></i>${p.name}${isDP(it,id)?' <span class="star">*</span>':""}</span></td>${METRICS.map(k=>{const v=pval(it,id,k);if(isDP(it,id))anyStar=true;return `<td class="num">${isDP(it,id)?'<span class="star">*</span>':v===null?"–":fmt(v)}</td>`}).join("")}</tr>`}).join("")+(hasLegacy(it)?`<tr class="sub"><td colspan="4">Earlier, not split</td>${METRICS.map(k=>`<td class="num">${num(it[k])===null?"–":fmt(it[k])}</td>`).join("")}</tr>`:""):"";
+      return main+subs}).join("")}</tbody></table>`+(anyStar?'':'')
     :`<div class="empty">No posts in this period yet.</div>`;
+  if(anyStar)$("#allposts").insertAdjacentHTML("beforeend",`<p class="foot"><span class="star">*</span>Didn't post on that platform</p>`);
   $("#allposts").querySelectorAll("[data-sort]").forEach(h=>h.onclick=()=>{const k=h.dataset.sort;stat.sort=s.key===k?{key:k,dir:-s.dir}:{key:k,dir:k==="title"||k==="category"?1:-1};renderStats()});
   $("#allposts").querySelectorAll("[data-x]").forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.x;stat.open.has(id)?stat.open.delete(id):stat.open.add(id);renderStats()});
   $("#allposts").querySelectorAll("[data-open]").forEach(r=>{r.onclick=()=>openEditor(items[r.dataset.open]);r.oncontextmenu=e=>{e.preventDefault();confirmDeleteItem(r.dataset.open)}});
 }
+setInterval(()=>{if($("#view-stats").classList.contains("active")&&!document.querySelector("#scrim.open"))renderStats()},5*60*1000);
 $("#speriod").onchange=e=>{stat.period=e.target.value;renderStats()};
 $("#splat").onchange=e=>{stat.plat=e.target.value;renderStats()};
 $("#sfrom").onchange=e=>{stat.from=e.target.value;renderStats()};
@@ -1258,14 +1314,14 @@ document.querySelectorAll("#e-ready button").forEach(b=>b.onclick=()=>setReadyUI
 let workStats={};
 function renderEditorStats(){
   const sel=[...document.querySelectorAll('#e-plats .tog[aria-pressed="true"]')].map(b=>b.dataset.p);
-  const rows=PLATFORMS.map(p=>p.id).filter(id=>sel.includes(id)||(workStats[id]&&METRICS.some(k=>num(workStats[id][k])!==null)));
+  const rows=PLATFORMS.map(p=>p.id).filter(id=>sel.includes(id)||(workStats[id]&&(workStats[id].dp||METRICS.some(k=>num(workStats[id][k])!==null))));
   const g=$("#e-pgrid");
   g.innerHTML=pgridHTML(rows.length?rows:PLATFORMS.map(p=>p.id),workStats,true);
   if(!rows.length)g.insertAdjacentHTML("afterbegin",`<div class="prow" style="display:block;font-size:13px;color:var(--muted)">Pick where it's posted above to only show those platforms.</div>`);
-  const upd=()=>{workStats=Object.assign({},workStats,readPgridAll(g));METRICS.forEach(k=>{let t=0;g.querySelectorAll(`input[data-k="${k}"]`).forEach(i=>t+=num(i.value)||0);g.querySelector(`[data-t="${k}"]`).textContent=fmt(t)})};
-  g.querySelectorAll("input").forEach(i=>i.addEventListener("input",upd));upd();
+  const upd=()=>{workStats=Object.assign({},workStats,readPgridAll(g));METRICS.forEach(k=>{let t=0;g.querySelectorAll(`.prow[data-p]:not(.isdp) input[data-k="${k}"]`).forEach(i=>t+=num(i.value)||0);g.querySelector(`[data-t="${k}"]`).textContent=fmt(t)})};
+  g.querySelectorAll("input").forEach(i=>i.addEventListener("input",upd));wireDP(g,upd);upd();
 }
-function readPgridAll(root){const out={};root.querySelectorAll(".prow[data-p]").forEach(r=>{const o={};r.querySelectorAll("input").forEach(i=>o[i.dataset.k]=num(i.value));out[r.dataset.p]=o});return out}
+function readPgridAll(root){const out={};root.querySelectorAll(".prow[data-p]").forEach(r=>{out[r.dataset.p]=readRow(r)});return out}
 function renderPlatToggles(sel){
   $("#e-plats").innerHTML=PLATFORMS.map(p=>`<button type="button" class="tog" data-p="${p.id}" aria-pressed="${sel.includes(p.id)}">${p.name}</button>`).join("");
   $("#e-plats").querySelectorAll(".tog").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");renderEditorStats()});
@@ -1279,7 +1335,7 @@ function openEditor(it,defaults){
   fillSelect($("#e-cat"),settings.categories,editing.category,"No category");
   fillSelect($("#e-status"),settings.statuses,editing.status,null);
   if(!$("#e-status").value&&settings.statuses[0])$("#e-status").value=settings.statuses[0].id;
-  $("#e-date").value=editing.date||"";$("#e-time").value=editing.time||"";$("#e-link").value=editing.link||"";
+  $("#e-date").value=editing.date||"";$("#e-time").value=editing.time||"";setSlotUI(editing.time?"":editing.slot||"");$("#e-link").value=editing.link||"";
   renderPlatToggles(editing.platforms||[]);
   fillSelect($("#e-working"),settings.people,editing.workingOn,"Nobody yet");
   fillSelect($("#e-edited"),settings.people,editing.editedBy,"Nobody yet");
@@ -1304,16 +1360,20 @@ document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{
   const base=$("#e-date").value?parseYmd($("#e-date").value):startOfDay(new Date());$("#e-date").value=ymd(addDays(base,+b.dataset.shift));
 });
 $("#e-cleardate").onclick=()=>{$("#e-date").value=""};
+function setSlotUI(v){document.querySelectorAll("#e-slots [data-slot]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.slot===v))}
+document.querySelectorAll("#e-slots [data-slot]").forEach(b=>b.onclick=()=>{const on=b.getAttribute("aria-pressed")!=="true";setSlotUI(on?b.dataset.slot:"");if(on)$("#e-time").value=""});
+$("#e-time").addEventListener("input",()=>{if($("#e-time").value)setSlotUI("")});
+$("#e-cleartime").onclick=()=>{$("#e-time").value="";setSlotUI("")};
 function closeEditor(){$("#scrim").classList.remove("open");$("#scrim").setAttribute("aria-hidden","true");editing=null}
 function readEditor(){
   let link=$("#e-link").value.trim();if(link&&!/^https?:\/\//i.test(link))link="https://"+link;
   const out=Object.assign({},editing,{
     title:$("#e-title").value.trim()||"Untitled",ready:$('#e-ready button[data-v="yes"]').getAttribute("aria-pressed")==="true",
-    category:$("#e-cat").value,status:$("#e-status").value,date:$("#e-date").value,time:$("#e-time").value,link,
+    category:$("#e-cat").value,status:$("#e-status").value,date:$("#e-date").value,time:$("#e-time").value,slot:$("#e-time").value?"":(document.querySelector('#e-slots [aria-pressed="true"]')||{dataset:{}}).dataset.slot||"",link,
     platforms:[...document.querySelectorAll('#e-plats .tog[aria-pressed="true"]')].map(b=>b.dataset.p),
     workingOn:$("#e-working").value,editedBy:$("#e-edited").value,doneBy:$("#e-done").value,
     players:$("#e-players").value.trim(),caption:$("#e-caption").value,notes:$("#e-notes").value,updated:Date.now()});
-  const ps={};Object.entries(readPgridAll($("#e-pgrid"))).forEach(([p,o])=>{if(METRICS.some(k=>o[k]!==null))ps[p]=o});
+  const ps={};Object.entries(readPgridAll($("#e-pgrid"))).forEach(([p,o])=>{if(o.dp||METRICS.some(k=>o[k]!==null))ps[p]=o});
   Object.entries(editing.pstats||{}).forEach(([p,o])=>{if(!(p in ps)&&!$(`#e-pgrid .prow[data-p="${p}"]`))ps[p]=o});
   out.pstats=ps;
   if(Object.keys(ps).length)METRICS.forEach(k=>out[k]=null);
