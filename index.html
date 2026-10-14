@@ -76,6 +76,7 @@ img{max-width:100%}
 .tabs{display:flex;gap:4px;margin-left:auto}
 .tab{background:none;border:0;color:rgba(255,255,255,.72);padding:10px 14px;border-radius:8px;font-weight:600;font-size:15px}
 .tab:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tab-link{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 .tab[aria-selected="true"]{color:#fff;background:rgba(255,255,255,.14);box-shadow:inset 0 -3px 0 var(--orange)}
 .sync{font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.12);white-space:nowrap}
 .sync::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#9AA0C8;margin-right:6px;vertical-align:1px}
@@ -471,6 +472,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <button class="tab" role="tab" data-tab="ideas" aria-selected="false">Ideas</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
+      <a class="tab tab-link" href="learn.html">Learn</a>
     </nav>
     <span class="sync" id="sync">Connecting</span>
   </div>
@@ -954,8 +956,8 @@ async function confirmDeleteItem(id){
 }
 
 /* ---------- Tabs ---------- */
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
+document.querySelectorAll(".tab[data-tab]").forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll(".tab[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===t));
   document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="view-"+t.dataset.tab));
   renderAll();
 }));
