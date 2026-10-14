@@ -92,6 +92,14 @@ main{max-width:1400px;margin:0 auto;padding:22px 20px 60px}
 .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
 .btn.primary:hover{background:#E65000;border-color:#E65000}
 .btn.ghost{border-color:transparent;background:transparent}
+.moreppl{display:flex;flex-direction:column;gap:6px}
+.moreppl:not(:empty){margin-top:6px}
+.pplrow{display:flex;gap:6px;align-items:center}
+.pplrow select{flex:1;min-width:0}
+.pplrow .rmppl{flex:0 0 auto;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.pplrow .rmppl:hover{color:var(--danger,#c0392b);border-color:currentColor}
+.addppl{margin-top:6px;border:0;background:none;padding:2px 0;font-size:13px;font-weight:600;color:var(--burnt);cursor:pointer}
+.addppl:hover{text-decoration:underline}
 .tab[data-tab="drafts"]{position:relative}
 @media (max-width:640px){.tabcount{position:absolute;top:-2px;right:-6px;margin:0;min-width:16px;line-height:16px;font-size:10px;padding:0 4px}}
 .tabcount{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
@@ -372,6 +380,33 @@ details.rem .rem-body{padding:0 16px 12px}
 .brow .bar{height:10px;border-radius:0 4px 4px 0;background:var(--c);min-width:3px}
 .brow .bv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 /* followers */
+details.dd{padding:0}
+details.dd>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;flex-wrap:wrap}
+details.dd>summary::-webkit-details-marker{display:none}
+details.dd>summary h3{margin:0;font-size:18px}
+details.dd>summary .tri{display:inline-block;transition:transform .15s;color:var(--muted);font-size:13px}
+details.dd[open]>summary .tri{transform:rotate(180deg)}
+details.dd>summary .hint{margin-left:auto;font-weight:400}
+details.dd>summary:hover h3{color:var(--burnt)}
+details.dd .dd-body{padding:0 16px 16px}
+details.dd .dd-body>.block-head{margin-top:2px}
+@media (prefers-reduced-motion:reduce){details.dd>summary .tri{transition:none}}
+@media (max-width:640px){details.dd>summary .hint{margin-left:0;width:100%}}
+details.mini{margin-top:6px}
+details.mini>summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--burnt);padding:4px 0;list-style:none}
+details.mini>summary::-webkit-details-marker{display:none}
+details.mini>summary::before{content:"▸ ";color:var(--muted)}
+details.mini[open]>summary::before{content:"▾ "}
+.psum{display:flex;flex-wrap:wrap;gap:10px;margin:2px 0 8px}
+.psum div{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface-2)}
+.psum span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:600}
+.psum i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.psum b{display:block;font-size:20px;margin-top:2px}
+.psum small{color:var(--muted);font-size:12px}
+.chart .ln{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .dot{stroke:var(--surface);stroke-width:2}
+.chart .vline{stroke:var(--line-strong);stroke-width:1;stroke-dasharray:3 3;opacity:0}
+.chart .hit:hover+.vline,.chart .hit.on+.vline{opacity:1}
 details.fol{padding:0}
 details.fol>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;font-weight:700;font-size:16px;flex-wrap:wrap}
 details.fol>summary::-webkit-details-marker{display:none}
@@ -585,39 +620,62 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     <details class="block fol" id="followers"></details>
     <details class="block rem" id="missingblock"></details>
 
-    <div class="block">
-      <div class="block-head"><h3>Best performing</h3><span class="spacer"></span>
-        <div class="seg" id="bmetric"><button data-m="views" aria-pressed="true">Views</button><button data-m="saves" aria-pressed="false">Saves</button><button data-m="shares" aria-pressed="false">Shares</button><button data-m="follows" aria-pressed="false">Follows</button></div>
+    <details class="block dd" data-dd="bestperforming">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>Best performing</h3></summary>
+      <div class="dd-body">
+        <div class="block-head"><div class="seg" id="bmetric"><button data-m="views" aria-pressed="true">Views</button><button data-m="saves" aria-pressed="false">Saves</button><button data-m="shares" aria-pressed="false">Shares</button><button data-m="follows" aria-pressed="false">Follows</button></div>
       </div>
       <div id="best"></div>
-    </div>
+      </div>
+    </details>
 
-    <div class="block" id="overtime">
-      <div class="block-head"><h3>Over time</h3><span class="spacer"></span>
-        <div class="seg" id="ssplit"><button data-s="category" aria-pressed="true">Split by category</button><button data-s="platform" aria-pressed="false">Split by platform</button></div>
-        <div class="seg" id="sgroup"><button data-g="week" aria-pressed="true">By week</button><button data-g="month" aria-pressed="false">By month</button></div>
+    <details class="block dd" id="overtime" data-dd="overtime">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>Over time</h3></summary>
+      <div class="dd-body">
+        <div class="block-head"><div class="seg" id="ssplit"><button data-s="category" aria-pressed="true">Split by category</button><button data-s="platform" aria-pressed="false">Split by platform</button></div>
+        <div class="seg" id="sgroup"><button data-g="day" aria-pressed="false">By day</button><button data-g="week" aria-pressed="true">By week</button><button data-g="month" aria-pressed="false">By month</button></div>
         <div class="seg" id="smetric"><button data-m="views" aria-pressed="true">Views</button><button data-m="saves" aria-pressed="false">Saves</button><button data-m="shares" aria-pressed="false">Shares</button><button data-m="follows" aria-pressed="false">Follows</button><button data-m="posts" aria-pressed="false">Posts</button></div>
       </div>
       <div class="legend2" id="tlegend"></div>
       <div class="chart" id="tchart"></div>
       <div class="tablewrap" id="bytime"></div>
-    </div>
+      </div>
+    </details>
 
-    <div class="block">
-      <div class="block-head"><h3>By platform</h3><span class="spacer"></span><span class="hint">Averages only use posts with views logged</span></div>
+    <details class="block dd" id="platcompare" data-dd="platcompare">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>Platforms compared</h3><span class="hint">One line per platform, for the period above</span></summary>
+      <div class="dd-body">
+        <div class="block-head">
+          <div class="seg" id="pmetric"><button data-m="views" aria-pressed="true">Views</button><button data-m="saves" aria-pressed="false">Saves</button><button data-m="shares" aria-pressed="false">Shares</button><button data-m="follows" aria-pressed="false">Follows</button><button data-m="posts" aria-pressed="false">Posts</button></div>
+          <div class="seg" id="pgroup"><button data-g="day" aria-pressed="true">By day</button><button data-g="week" aria-pressed="false">By week</button><button data-g="month" aria-pressed="false">By month</button></div>
+        </div>
+        <div class="legend2" id="plegend"></div>
+        <div class="chart" id="pchart"></div>
+        <div id="psum"></div>
+        <details class="mini"><summary>See the numbers</summary><div class="tablewrap" id="ptable"></div></details>
+      </div>
+    </details>
+
+    <details class="block dd" data-dd="byplatform">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>By platform</h3><span class="hint">Averages only use posts with views logged</span></summary>
+      <div class="dd-body">
       <div class="tablewrap" id="byplat"></div>
-    </div>
+      </div>
+    </details>
 
-    <div class="block">
-      <div class="block-head"><h3>By category</h3><span class="spacer"></span><span class="hint" id="bycathint"></span></div>
+    <details class="block dd" data-dd="bycategory">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>By category</h3><span class="hint" id="bycathint"></span></summary>
+      <div class="dd-body">
       <div class="tablewrap" id="bycat"></div>
-    </div>
+      </div>
+    </details>
 
-
-    <div class="block">
-      <div class="block-head"><h3>Every post</h3><span class="spacer"></span><span class="hint">Tap a column to sort · tap ▸ to see each platform</span></div>
+    <details class="block dd" data-dd="everypost">
+      <summary><span class="tri" aria-hidden="true">▼</span><h3>Every post</h3><span class="hint">Tap a column to sort · tap ▸ to see each platform</span></summary>
+      <div class="dd-body">
       <div class="tablewrap" id="allposts"></div>
-    </div>
+      </div>
+    </details>
   </section>
 
   <!-- Settings -->
@@ -699,9 +757,9 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <div class="full"><label class="f">Posting on</label><div class="toggles" id="e-plats"></div></div>
       <div class="full"><label class="f" for="e-link">Video or file link</label>
         <div class="linkrow"><input type="url" id="e-link" placeholder="Paste a Google Drive, Dropbox or Frame.io link"><a class="btn" id="e-open" target="_blank" rel="noopener">Open</a></div></div>
-      <div><label class="f" for="e-working">Working on</label><select id="e-working"></select></div>
-      <div><label class="f" for="e-edited">Edited by</label><select id="e-edited"></select></div>
-      <div><label class="f" for="e-done">Done by</label><select id="e-done"></select></div>
+      <div><label class="f" for="e-working">Working on</label><select id="e-working"></select><div class="moreppl" data-f="workingOn"></div><button type="button" class="addppl" data-f="workingOn">+ Add another name</button></div>
+      <div><label class="f" for="e-edited">Edited by</label><select id="e-edited"></select><div class="moreppl" data-f="editedBy"></div><button type="button" class="addppl" data-f="editedBy">+ Add another name</button></div>
+      <div><label class="f" for="e-done">Done by</label><select id="e-done"></select><div class="moreppl" data-f="doneBy"></div><button type="button" class="addppl" data-f="doneBy">+ Add another name</button></div>
       <div><label class="f" for="e-players">Players featured</label><input type="text" id="e-players" placeholder="Names, comma separated"></div>
       <div class="full"><label class="f" for="e-caption">Caption</label><textarea id="e-caption" rows="3" placeholder="Draft caption and hashtags"></textarea></div>
       <div class="full"><label class="f" for="e-notes">Notes</label><textarea id="e-notes" rows="3" placeholder="Shot list, music, reminders"></textarea></div>
@@ -778,7 +836,7 @@ let settings=clone(DEFAULT_SETTINGS), items={};
 let calMode="month", cursor=startOfDay(new Date());
 let range={from:ymd(startOfDay(new Date())),to:ymd(addDays(startOfDay(new Date()),6))};
 let hiddenCats=new Set(), sHiddenCats=new Set();
-let stat={bmetric:"views",split:"category",open:new Set(),period:"thismonth",from:"",to:"",plat:"",group:"week",metric:"views",sort:{key:"date",dir:-1}};
+let stat={pmetric:"views",pgroup:"day",bmetric:"views",split:"category",open:new Set(),period:"thismonth",from:"",to:"",plat:"",group:"week",metric:"views",sort:{key:"date",dir:-1}};
 let editing=null;
 const TOUCH=window.matchMedia("(pointer: coarse)").matches;
 
@@ -805,6 +863,9 @@ function shortDate(s){const d=parseYmd(s);return `${DOW[(d.getDay()+6)%7]} ${d.g
 const catById=id=>settings.categories.find(c=>c.id===id);
 const stById=id=>settings.statuses.find(s=>s.id===id);
 const personById=id=>settings.people.find(p=>p.id===id);
+const PPL_FIELDS=["workingOn","editedBy","doneBy"];
+function peopleIn(it,f){return [...new Set([it[f],...(Array.isArray(it[f+"More"])?it[f+"More"]:[])].filter(Boolean))].filter(id=>personById(id))}
+function peopleNames(it,f){return peopleIn(it,f).map(id=>personById(id).name)}
 function catColor(it){const c=catById(it.category);return c?c.color:"#9AA0C8"}
 function initials(n){return (n||"?").split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase()}
 function textOn(hex){
@@ -987,6 +1048,16 @@ async function confirmDeleteItem(id){
   removeItem(id);renderAll();toast("Deleted");return true;
 }
 
+
+/* Stats dropdowns: remember which are open on this device, redraw when opened */
+(function(){
+  const KEY="eanna-stats-open";let st={};try{st=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+  document.querySelectorAll("details.dd[data-dd]").forEach(d=>{
+    if(st[d.dataset.dd])d.open=true;
+    d.addEventListener("toggle",()=>{st[d.dataset.dd]=d.open;try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}
+      if(d.open&&typeof renderStats==="function")renderStats()});
+  });
+})();
 /* ---------- Tabs ---------- */
 document.querySelectorAll(".tab[data-tab]").forEach(t=>t.addEventListener("click",()=>{
   document.querySelectorAll(".tab[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===t));
@@ -1014,7 +1085,7 @@ function readyBtn(it){
 function stagePill(st){return st?`<span class="stage" style="--s:${esc(st.color)};--st:${textOn(st.color)}">${esc(st.name)}</span>`:""}
 function platsHTML(it){const p=(it.platforms||[]).map(id=>PLATFORMS.find(x=>x.id===id)).filter(Boolean);return p.length?`<span class="plats">${p.map(x=>`<b title="${x.name}">${x.ab}</b>`).join("")}</span>`:""}
 function whoHTML(it){
-  const u=[...new Set([it.workingOn,it.editedBy,it.doneBy].filter(Boolean))].map(personById).filter(Boolean);
+  const u=[...new Set(PPL_FIELDS.flatMap(f=>peopleIn(it,f)))].map(personById).filter(Boolean);
   return u.length?`<span class="who">${u.map(p=>`<b title="${esc(p.name)}">${esc(initials(p.name))}</b>`).join("")}</span>`:"";
 }
 function cardHTML(it){
@@ -1075,7 +1146,7 @@ function dayHTML(){
   if(!list.length)return `<div class="dayview" data-drop="${ds}"><div class="empty"><img src="${LOGO_LIGHT}" alt="">Nothing planned for this day.<br><br><button class="btn primary" data-new="${ds}">Add a post</button></div></div>`;
   return `<div class="dayview" data-drop="${ds}">${list.map(it=>{
     const c=catById(it.category);
-    const ppl=[["Working on",it.workingOn],["Edited by",it.editedBy],["Done by",it.doneBy]].filter(x=>personById(x[1])).map(x=>`<span>${x[0]}: <strong>${esc(personById(x[1]).name)}</strong></span>`).join("");
+    const ppl=[["Working on","workingOn"],["Edited by","editedBy"],["Done by","doneBy"]].map(x=>[x[0],peopleNames(it,x[1])]).filter(x=>x[1].length).map(x=>`<span>${x[0]}: <strong>${esc(x[1].join(", "))}</strong></span>`).join("");
     const st=hasStats(it)?`<span>${fmt(mval(it,"views"))} views · ${fmt(mval(it,"saves"))} saves · ${fmt(mval(it,"shares"))} shares · ${fmt(mval(it,"follows"))} follows</span>`:"";
     return `<div class="dcard" role="button" tabindex="0" data-id="${it.id}" style="--c:${esc(catColor(it))}">
       <h4>${readyBtn(it)}${timeLabel(it)?esc(timeLabel(it))+" · ":""}${esc(it.title||"Untitled")}</h4>
@@ -1234,7 +1305,7 @@ function renderBoard(){
 }
 function blankItem(extra){
   return Object.assign({id:uid("it"),title:"",category:(settings.categories[0]||{}).id||"",status:(settings.statuses[0]||{}).id||"",
-    date:"",time:"",slot:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",players:"",caption:"",notes:"",
+    date:"",time:"",slot:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",workingOnMore:[],editedByMore:[],doneByMore:[],players:"",caption:"",notes:"",
     draft:false,wasDate:"",views:null,saves:null,shares:null,follows:null,pstats:{},created:Date.now(),updated:Date.now()},extra||{});
 }
 function renderBank(){
@@ -1267,14 +1338,19 @@ function statItems(){
 function avgViews(s){return s.logged?fmt(Math.round(s.views/s.logged)):"–"}
 function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={logged:list.filter(it=>mval(it,"views",plat)!==null).length,posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
 function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
-function groupKey(ds){
-  if(stat.group==="month")return ds.slice(0,7);
+function groupKeyG(ds,g){
+  if(g==="month")return ds.slice(0,7);
+  if(g==="day")return ds;
   return ymd(mondayOf(parseYmd(ds)));
 }
-function groupLabel(k){
-  if(stat.group==="month"){const [y,m]=k.split("-");return MONTHS[+m-1].slice(0,3)+" "+y}
+function groupLabelG(k,g){
+  if(g==="month"){const [y,m]=k.split("-");return MONTHS[+m-1].slice(0,3)+" "+y}
+  if(g==="day")return shortDate(k);
   const d=parseYmd(k);return "Week of "+d.getDate()+" "+MONTHS[d.getMonth()].slice(0,3);
 }
+function groupKey(ds){return groupKeyG(ds,stat.group)}
+function groupLabel(k){return groupLabelG(k,stat.group)}
+const GROUP_HEAD={day:"Day",week:"Week",month:"Month"};
 /* ---------- Chart helpers ---------- */
 function compact(n){n=Math.round(n);if(Math.abs(n)>=1e6)return(n/1e6).toFixed(n%1e6?1:0).replace(/\.0$/,"")+"m";if(Math.abs(n)>=1e4)return Math.round(n/1e3)+"k";if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1).replace(/\.0$/,"")+"k";return String(n)}
 function niceMax(v){if(v<=0)return 4;const p=Math.pow(10,Math.floor(Math.log10(v)));const f=v/p;const n=f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10;return n*p}
@@ -1292,6 +1368,62 @@ function wireTips(root){
 }
 document.addEventListener("pointerdown",e=>{if(!e.target.closest("[data-tipi]"))hideTip()});
 addEventListener("scroll",hideTip,{passive:true});
+
+/* Line chart: one line per series, one point per day/week/month */
+function lineChart(el,keys,labels,series,valueOf,metricName){
+  const W=Math.max(el.clientWidth||900,keys.length*22+60),H=240,ml=44,mr=34,mt=12,mb=28,pw=W-ml-mr,ph=H-mt-mb;
+  const all=keys.flatMap(k=>series.map(s=>valueOf(k,s)));
+  const max=niceMax(Math.max(...all,0)/4)*4;
+  const step=keys.length>1?pw/(keys.length-1):0;
+  const xx=i=>keys.length>1?ml+step*i:ml+pw/2,yy=v=>mt+ph-(v/max)*ph;
+  let g="";
+  for(let i=0;i<=4;i++){const v=max*i/4,y=yy(v);g+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}"/><text class="ax" x="${ml-6}" y="${y+4}" text-anchor="end">${compact(v)}</text>`}
+  const every=Math.ceil(keys.length/Math.max(1,Math.floor(pw/64)));
+  let lines="",dots="",hits="",xl="";const tips=[];
+  const showDots=keys.length<=45;
+  series.forEach(s=>{
+    const pts=keys.map((k,i)=>[xx(i),yy(valueOf(k,s))]);
+    lines+=`<path class="ln" style="stroke:${s.color}" d="${pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join("")}"/>`;
+    if(showDots)pts.forEach(p=>dots+=`<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" style="fill:${s.color}"/>`);
+  });
+  const hw=keys.length>1?step:pw;
+  keys.forEach((k,i)=>{
+    const x=xx(i);
+    tips.push(`<b>${esc(labels[i])}</b>`+series.map(s=>`<div class="r"><span><i style="background:${s.color};border-radius:50%"></i>${esc(s.name)}</span><span>${fmt(valueOf(k,s))}</span></div>`).join(""));
+    hits+=`<rect class="hit" data-tipi="${i}" x="${Math.max(ml,x-hw/2)}" y="${mt}" width="${hw}" height="${ph}" rx="4"/><line class="vline" x1="${x}" x2="${x}" y1="${mt}" y2="${mt+ph}"/>`;
+    if(i%every===0)xl+=`<text class="ax" x="${x}" y="${H-8}" text-anchor="middle">${esc(labels[i].replace(/^Week of /,""))}</text>`;
+  });
+  el.innerHTML=`<svg width="${W}" height="${H}" role="img" aria-label="${esc(metricName)} per platform, line chart. The table below has the same numbers.">${g}<line x1="${ml}" x2="${W-mr}" y1="${mt+ph}" y2="${mt+ph}" stroke="var(--line-strong)"/>${lines}${dots}${hits}${xl}</svg>`;
+  el._tips=tips;wireTips(el);
+}
+/* Every day/week/month between two dates, so quiet days still show as 0 */
+function rangeKeys(f,t,g){const out=[];let d=parseYmd(f);const end=parseYmd(t);let n=0;while(d<=end&&n<1200){const k=groupKeyG(ymd(d),g);if(out[out.length-1]!==k)out.push(k);d=addDays(d,1);n++}return out}
+function renderPlatCompare(plist){
+  document.querySelectorAll("#pmetric button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===stat.pmetric));
+  document.querySelectorAll("#pgroup button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===stat.pgroup));
+  const box=$("#pchart");if(!box)return;
+  const mk=stat.pmetric,g=stat.pgroup,mname=METRIC_NAMES[mk].toLowerCase();
+  const plats=PLATFORMS.filter(p=>plist.some(it=>(it.platforms||[]).includes(p.id)||hasPlat(it,p.id)));
+  if(!plist.length||!plats.length){box.innerHTML=`<div class="empty">No posts in this period yet.</div>`;$("#plegend").innerHTML="";$("#psum").innerHTML="";$("#ptable").innerHTML="";return}
+  let[f,t]=statRange();const ds=plist.map(it=>it.date).sort();
+  if(f<ds[0]&&(stat.period==="all"||f==="0000-01-01"))f=ds[0];
+  if(t==="9999-12-31")t=ds[ds.length-1];
+  const today=todayStr();if(t>today&&f<=today)t=ds[ds.length-1]>today?ds[ds.length-1]:today;
+  const keys=rangeKeys(f,t,g);
+  const groups={};plist.forEach(it=>{const k=groupKeyG(it.date,g);(groups[k]=groups[k]||[]).push(it)});
+  const on=(arr,p)=>(arr||[]).filter(it=>(it.platforms||[]).includes(p.id)||hasPlat(it,p.id));
+  const val=(k,s)=>{const o=on(groups[k],s);return o.length?sumOf(o,s.id)[mk]:0};
+  const series=plats.map(p=>({id:p.id,name:p.name,color:p.color}));
+  $("#plegend").innerHTML=series.map(s=>`<span><i style="background:${s.color};border-radius:50%"></i>${esc(s.name)}</span>`).join("");
+  const labels=keys.map(k=>groupLabelG(k,g));
+  if(keys.some(k=>series.some(s=>val(k,s)>0)))lineChart(box,keys,labels,series,val,METRIC_NAMES[mk]);
+  else box.innerHTML=`<div class="empty">No ${mname} logged in this period yet.</div>`;
+  const per={day:"day",week:"week",month:"month"}[g];
+  $("#psum").innerHTML=`<div class="psum">${series.map(s=>{const tot=keys.reduce((a,k)=>a+val(k,s),0);const best=keys.reduce((b,k)=>val(k,s)>(b?val(b,s):0)?k:b,null);
+    return `<div><span><i style="background:${s.color}"></i>${esc(s.name)}</span><b>${fmt(tot)}</b><small>${fmt(Math.round(tot/Math.max(keys.length,1)))} per ${per} on average${best?` · best ${esc(groupLabelG(best,g).replace(/^Week of /,"w/c "))}`:""}</small></div>`}).join("")}</div>`;
+  $("#ptable").innerHTML=`<table class="data"><thead><tr><th>${GROUP_HEAD[g]}</th>${series.map(s=>`<th class="num"><span class="catcell"><i style="background:${s.color};border-radius:50%"></i>${esc(s.name)}</span></th>`).join("")}<th class="num">Total ${mname}</th></tr></thead><tbody>
+    ${keys.slice().reverse().map(k=>`<tr><td>${esc(groupLabelG(k,g))}</td>${series.map(s=>`<td class="num">${fmt(val(k,s))}</td>`).join("")}<td class="num"><strong>${fmt(series.reduce((a,s)=>a+val(k,s),0))}</strong></td></tr>`).join("")}</tbody></table>`;
+}
 
 /* Stacked columns: one column per week/month, one segment per series */
 function stackChart(el,keys,labels,series,valueOf,metricName){
@@ -1466,6 +1598,7 @@ function renderStats(){
     ${leg.length?`<tr><td><span class="catcell"><i style="background:#9AA0C8;border-radius:50%"></i>Earlier, not split</span></td>${pcell(legS,leg.length)}</tr>`:""}
     <tr class="total"><td>All platforms</td><td class="num">${fmt(sumOf(plist,"").posts)}</td>${METRICS.map(k=>`<td class="num">${fmt(ptot[k])}</td>`).join("")}<td class="num">${avgViews(sumOf(plist,""))}</td></tr></tbody></table>${plist.some(it=>PLATFORMS.some(p=>isDP(it,p.id)))?`<p class="foot">Posts count only where it actually went up. Didn't-post entries are left out.</p>`:""}`
     :`<div class="empty">No posts in this period yet.</div>`;
+  renderPlatCompare(plist);
   $("#byplat").querySelectorAll("[data-plat]").forEach(r=>r.onclick=()=>{stat.plat=stat.plat===r.dataset.plat?"":r.dataset.plat;renderStats()});
   $("#bycathint").textContent=stat.plat?platById(stat.plat).name+" only":"All platforms added together";
 
@@ -1501,7 +1634,7 @@ function renderStats(){
   const anyVal=keys.some(k=>tval(groups[k])>0);
   if(anyVal&&cols.length){stackChart($("#tchart"),ckeys,ckeys.map(groupLabel),cols,(k,c)=>cval(groups[k],c)||0,METRIC_NAMES[mk].toLowerCase())}
   else $("#tchart").innerHTML=keys.length?`<div class="empty">No ${METRIC_NAMES[mk].toLowerCase()} logged in this period yet.</div>`:"";
-  $("#bytime").innerHTML=keys.length?`<table class="data"><thead><tr><th>${stat.group==="month"?"Month":"Week"}</th>${cols.map(c=>`<th class="num"><span class="catcell"><i style="background:${esc(c.color)}${c.round?";border-radius:50%":""}"></i>${esc(c.name)}</span></th>`).join("")}<th class="num">Total ${METRIC_NAMES[mk].toLowerCase()}</th></tr></thead><tbody>
+  $("#bytime").innerHTML=keys.length?`<table class="data"><thead><tr><th>${GROUP_HEAD[stat.group]}</th>${cols.map(c=>`<th class="num"><span class="catcell"><i style="background:${esc(c.color)}${c.round?";border-radius:50%":""}"></i>${esc(c.name)}</span></th>`).join("")}<th class="num">Total ${METRIC_NAMES[mk].toLowerCase()}</th></tr></thead><tbody>
     ${keys.map(k=>`<tr><td>${groupLabel(k)}</td>${cols.map(c=>`<td class="num">${fmt(cval(groups[k],c))}</td>`).join("")}<td class="num"><strong>${fmt(tval(groups[k]))}</strong></td></tr>`).join("")}
     <tr class="total"><td>Total</td>${cols.map(c=>`<td class="num">${fmt(cval(tlist,c))}</td>`).join("")}<td class="num">${fmt(tval(tlist))}</td></tr></tbody></table>`
     :`<div class="empty">No posts in this period yet.</div>`;
@@ -1539,6 +1672,8 @@ let rsT;addEventListener("resize",()=>{clearTimeout(rsT);rsT=setTimeout(()=>{if(
 document.querySelectorAll("#ssplit button").forEach(b=>b.onclick=()=>{stat.split=b.dataset.s;renderStats()});
 document.querySelectorAll("#sgroup button").forEach(b=>b.onclick=()=>{stat.group=b.dataset.g;renderStats()});
 document.querySelectorAll("#smetric button").forEach(b=>b.onclick=()=>{stat.metric=b.dataset.m;renderStats()});
+document.querySelectorAll("#pmetric button").forEach(b=>b.onclick=()=>{stat.pmetric=b.dataset.m;renderStats()});
+document.querySelectorAll("#pgroup button").forEach(b=>b.onclick=()=>{stat.pgroup=b.dataset.g;renderStats()});
 
 /* ---------- Settings ---------- */
 function trash(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3"/></svg>'}
@@ -1598,6 +1733,19 @@ function fillSelect(sel,list,val,emptyLabel){
   sel.innerHTML=(emptyLabel!=null?`<option value="">${esc(emptyLabel)}</option>`:"")+list.map(o=>`<option value="${esc(o.id)}">${esc(o.name)}</option>`).join("");
   sel.value=val||"";if(sel.value!==(val||""))sel.value="";
 }
+/* Extra names: each people field can hold more than one person */
+function pplOptions(val){return `<option value="">Pick a name</option>`+settings.people.map(o=>`<option value="${esc(o.id)}"${o.id===val?" selected":""}>${esc(o.name)}</option>`).join("")}
+function addPplRow(box,val){
+  const r=document.createElement("div");r.className="pplrow";
+  r.innerHTML=`<select aria-label="Another name">${pplOptions(val||"")}</select><button type="button" class="rmppl" aria-label="Remove this name">×</button>`;
+  r.querySelector(".rmppl").onclick=()=>r.remove();box.appendChild(r);return r;
+}
+function renderMorePpl(f,ids){const box=document.querySelector(`.moreppl[data-f="${f}"]`);box.innerHTML="";ids.forEach(id=>addPplRow(box,id))}
+function readMorePpl(f,mainSel){const main=$(mainSel).value;
+  return [...new Set([...document.querySelectorAll(`.moreppl[data-f="${f}"] select`)].map(x=>x.value).filter(v=>v&&v!==main))]}
+document.querySelectorAll(".addppl").forEach(b=>b.onclick=()=>{
+  if(!settings.people.length){toast("Add names in Settings first");return}
+  const r=addPplRow(document.querySelector(`.moreppl[data-f="${b.dataset.f}"]`),"");if(!TOUCH)r.querySelector("select").focus()});
 function setReadyUI(v){document.querySelectorAll("#e-ready button").forEach(b=>b.setAttribute("aria-pressed",(b.dataset.v==="yes")===v))}
 document.querySelectorAll("#e-ready button").forEach(b=>b.onclick=()=>setReadyUI(b.dataset.v==="yes"));
 let workStats={};
@@ -1631,6 +1779,7 @@ function openEditor(it,defaults){
   fillSelect($("#e-working"),settings.people,editing.workingOn,"Nobody yet");
   fillSelect($("#e-edited"),settings.people,editing.editedBy,"Nobody yet");
   fillSelect($("#e-done"),settings.people,editing.doneBy,"Nobody yet");
+  PPL_FIELDS.forEach(f=>renderMorePpl(f,(editing[f+"More"]||[]).filter(id=>personById(id))));
   $("#e-players").value=editing.players||"";$("#e-caption").value=editing.caption||"";$("#e-notes").value=editing.notes||"";
   workStats=clone(editing.pstats||{});renderEditorStats();
   const lg=$("#e-legacy");
@@ -1662,11 +1811,12 @@ function readEditor(){
     title:$("#e-title").value.trim()||"Untitled",ready:$('#e-ready button[data-v="yes"]').getAttribute("aria-pressed")==="true",
     category:$("#e-cat").value,status:$("#e-status").value,date:$("#e-date").value,time:$("#e-time").value,slot:$("#e-time").value?"":(document.querySelector('#e-slots [aria-pressed="true"]')||{dataset:{}}).dataset.slot||"",link,
     platforms:[...document.querySelectorAll('#e-plats .tog[aria-pressed="true"]')].map(b=>b.dataset.p),
-    workingOn:$("#e-working").value,editedBy:$("#e-edited").value,doneBy:$("#e-done").value,
+    workingOn:$("#e-working").value,editedBy:$("#e-edited").value,doneBy:$("#e-done").value,workingOnMore:readMorePpl("workingOn","#e-working"),editedByMore:readMorePpl("editedBy","#e-edited"),doneByMore:readMorePpl("doneBy","#e-done"),
     players:$("#e-players").value.trim(),caption:$("#e-caption").value,notes:$("#e-notes").value,updated:Date.now()});
   const ps={};Object.entries(readPgridAll($("#e-pgrid"))).forEach(([p,o])=>{if(o.dp||METRICS.some(k=>o[k]!==null))ps[p]=o});
   Object.entries(editing.pstats||{}).forEach(([p,o])=>{if(!(p in ps)&&!$(`#e-pgrid .prow[data-p="${p}"]`))ps[p]=o});
   out.pstats=ps;
+  PPL_FIELDS.forEach(f=>{if(!out[f]&&out[f+"More"].length)out[f]=out[f+"More"].shift()});
   if(Object.keys(ps).length)METRICS.forEach(k=>out[k]=null);
   return out;
 }
