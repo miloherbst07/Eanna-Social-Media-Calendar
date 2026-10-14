@@ -92,6 +92,9 @@ main{max-width:1400px;margin:0 auto;padding:22px 20px 60px}
 .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
 .btn.primary:hover{background:#E65000;border-color:#E65000}
 .btn.ghost{border-color:transparent;background:transparent}
+.tab[data-tab="drafts"]{position:relative}
+@media (max-width:640px){.tabcount{position:absolute;top:-2px;right:-6px;margin:0;min-width:16px;line-height:16px;font-size:10px;padding:0 4px}}
+.tabcount{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
 .btn.ghost:hover{background:var(--surface-2)}
 .btn.danger{color:#D0342C;border-color:transparent;background:transparent}
 .btn.danger:hover{background:rgba(208,52,44,.08)}
@@ -200,6 +203,20 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-b
 .md .dots{position:absolute;left:0;right:0;bottom:1px;display:flex;justify-content:center;gap:1.5px}
 .md .dots i{width:5px;height:5px;border-radius:50%}
 
+/* Drafts */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.dgroup{margin:0 0 22px}
+.dgroup h3{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.dgroup h3 small{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-weight:700;font-size:12px;padding:1px 8px;border-radius:99px}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.dcard .card{padding:9px 10px}
+.dcard .card .t .tt{white-space:normal}
+.dnote{font-size:12px;color:var(--muted);padding:0 2px}
+.dnote b{color:var(--burnt)}
+.dsched{display:flex;gap:6px;align-items:center}
+.dsched input{flex:1;min-width:0;padding:7px 8px;font-size:13px}
+.dsched .btn{white-space:nowrap;padding:7px 10px;font-size:13px}
+.draftpill{font-size:11px;font-weight:700;color:var(--burnt);border:1px solid currentColor;border-radius:99px;padding:0 7px}
 /* Ideas */
 .page-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
 .page-head h2{font-family:var(--display);font-style:italic;font-weight:800;font-size:34px;line-height:1;margin:0 8px 0 0}
@@ -385,7 +402,9 @@ details.fol>summary .fsum i{width:9px;height:9px;border-radius:50%}
 .mpost-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .mpost-head strong{border-left:4px solid var(--c);padding-left:8px}
 .mpost-head small{color:var(--muted)}
-.mpost-head .btn{margin-left:auto}
+.mpost-head .btn[data-todraft]{margin-left:auto;color:var(--muted);font-size:13px}
+.mpost-head .btn[data-save]{margin-left:0}
+@media (max-width:640px){.mpost-head .btn[data-todraft]{margin-left:0}}
 .mpost .pgrid{background:var(--surface)}
 .need{font-size:11.5px;font-weight:700;color:#8A5A00;background:color-mix(in srgb,var(--todo) 22%,transparent);padding:1px 7px;border-radius:99px}
 .xbtn{border:0;background:none;color:var(--muted);font-size:13px;padding:2px 6px;border-radius:6px;margin-right:4px}
@@ -470,6 +489,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="calendar" aria-selected="true">Calendar</button>
       <button class="tab" role="tab" data-tab="ideas" aria-selected="false">Ideas</button>
+      <button class="tab" role="tab" data-tab="drafts" aria-selected="false">Drafts</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
       <a class="tab tab-link" href="learn.html">Learn</a>
@@ -526,6 +546,17 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       </summary>
       <div class="bank-body" id="bankbody"></div>
     </details>
+  </section>
+
+  <!-- Drafts -->
+  <section class="view" id="view-drafts">
+    <div class="page-head">
+      <h2>Drafts</h2>
+      <span class="hint">Posts that are made but not on the calendar, including ones that didn't go out in the end. Pick a date to put a draft back on the calendar.</span>
+      <span style="flex:1"></span>
+      <button class="btn primary" id="newdraft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New draft</button>
+    </div>
+    <div id="drafts"></div>
   </section>
 
   <!-- Stats -->
@@ -649,7 +680,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <div><label class="f" for="e-cat">Category</label><select id="e-cat"></select></div>
       <div><label class="f" for="e-status">Stage</label><select id="e-status"></select></div>
       <div>
-        <label class="f" for="e-date">Date <span style="font-weight:400">(leave empty to keep as an idea)</span></label>
+        <label class="f" for="e-date">Date <span style="font-weight:400" id="e-datehint">(leave empty to keep as an idea)</span></label>
         <input type="date" id="e-date">
         <div class="datebtns">
           <button class="btn" type="button" data-shift="-1">− 1 day</button>
@@ -681,6 +712,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     <div class="modal-foot">
       <button class="btn danger" id="e-delete">Delete</button>
       <button class="btn ghost" id="e-dup">Duplicate</button>
+      <button class="btn ghost" id="e-draft">Move to drafts</button>
       <span class="spacer"></span>
       <button class="btn" id="e-cancel">Cancel</button>
       <button class="btn primary" id="e-save">Save</button>
@@ -963,7 +995,7 @@ document.querySelectorAll(".tab[data-tab]").forEach(t=>t.addEventListener("click
 }));
 
 /* ---------- Rendering ---------- */
-function renderAll(){renderFilters();renderCalendar();renderBoard();renderBank();renderStats();renderSettings()}
+function renderAll(){renderFilters();renderCalendar();renderBoard();renderDrafts();renderBank();renderStats();renderSettings()}
 function visibleDated(){return Object.values(items).filter(it=>it.date&&!hiddenCats.has(it.category||"none"))}
 function itemsOn(ds){
   return visibleDated().filter(it=>it.date===ds).sort((a,b)=>sortTime(a).localeCompare(sortTime(b))||(a.created||0)-(b.created||0));
@@ -1144,10 +1176,49 @@ $("#rfrom").onchange=setRange;$("#rto").onchange=setRange;
 document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const s=startOfDay(new Date());range={from:ymd(s),to:ymd(addDays(s,+b.dataset.q-1))};renderCalendar()});
 $("#newpost").onclick=()=>openEditor(null,{date:calMode==="day"?ymd(cursor):todayStr()});
 $("#newidea").onclick=()=>openEditor(null,{date:""});
+$("#newdraft").onclick=()=>openEditor(null,{date:"",draft:true});
+
+/* ---------- Drafts ---------- */
+function hasAnyResults(it){return hasStats(it)}
+function draftUpdate(it){
+  // Turn a post into a draft: off the calendar, results cleared (it never went out), original date remembered
+  const up={draft:true,date:"",wasDate:it.date||it.wasDate||"",pstats:{},updated:Date.now()};METRICS.forEach(k=>up[k]=null);
+  const st=stById(it.status),nm=st?st.name.toLowerCase():"";
+  if(nm==="posted"||nm==="scheduled"){const ed=settings.statuses.find(x=>x.name.toLowerCase()==="edited");if(ed)up.status=ed.id}
+  return Object.assign({},it,up);
+}
+async function moveToDrafts(it,fromEditor){
+  if(!it)return false;
+  if(hasAnyResults(it)&&!await askConfirm(`"${it.title||"Untitled"}" will come off the calendar and the results logged for it will be cleared, since it didn't go out.`,"Move to drafts"))return false;
+  persistItem(draftUpdate(it));if(fromEditor)closeEditor();renderAll();toast("Moved to Drafts");return true;
+}
+function scheduleDraft(id,ds){
+  const it=items[id];if(!it||!ds)return;
+  persistItem(Object.assign({},it,{draft:false,date:ds,updated:Date.now()}));renderAll();toast("Added to the calendar for "+shortDate(ds));
+}
+function renderDrafts(){
+  const box=$("#drafts");if(!box)return;
+  const all=Object.values(items).filter(it=>it.draft&&!it.date).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const missed=all.filter(it=>it.wasDate),fresh=all.filter(it=>!it.wasDate);
+  const tab=document.querySelector('.tab[data-tab="drafts"]');if(tab)tab.innerHTML="Drafts"+(all.length?` <span class="tabcount">${all.length}</span>`:"");
+  const dcard=it=>`<div class="dcard">${cardHTML(it)}
+      ${it.wasDate?`<div class="dnote"><b>Didn't post</b> · was planned for ${shortDate(it.wasDate)}</div>`:""}
+      <div class="dsched"><input type="date" aria-label="Date for ${esc(it.title||"Untitled")}" data-dd="${it.id}" value="${esc(it.planDate||"")}"><button class="btn" data-sched="${it.id}">Add to calendar</button></div></div>`;
+  const group=(title,list,hint)=>list.length?`<div class="dgroup"><h3>${title}<small>${list.length}</small></h3>${hint?`<p class="hint" style="margin:-4px 0 10px">${hint}</p>`:""}<div class="dgrid">${list.map(dcard).join("")}</div></div>`:"";
+  box.innerHTML=all.length?group("Drafts",fresh,"")+group("Didn't go out",missed,"Posts that were on the calendar but never went up. Give them a new date to try again."):
+    `<div class="empty">No drafts yet. Make one with <strong>New draft</strong>, or open a post on the calendar and choose <strong>Move to drafts</strong> if it didn't go out.</div>`;
+  wireItems(box);
+  box.querySelectorAll("[data-sched]").forEach(b=>b.onclick=()=>{
+    const inp=box.querySelector(`[data-dd="${b.dataset.sched}"]`);
+    if(!inp.value){inp.focus();if(inp.showPicker)try{inp.showPicker()}catch(e){};toast("Pick a date first");return}
+    scheduleDraft(b.dataset.sched,inp.value);
+  });
+  box.querySelectorAll("[data-dd]").forEach(i=>{i.addEventListener("click",e=>e.stopPropagation());i.addEventListener("keydown",e=>{if(e.key==="Enter"&&i.value)scheduleDraft(i.dataset.dd,i.value)})});
+}
 
 /* ---------- Ideas ---------- */
 function renderBoard(){
-  const board=$("#board"),ideas=Object.values(items).filter(it=>!it.date);
+  const board=$("#board"),ideas=Object.values(items).filter(it=>!it.date&&!it.draft);
   const known=new Set(settings.statuses.map(s=>s.id));
   let html=settings.statuses.map(s=>{
     const list=ideas.filter(it=>it.status===s.id).sort((a,b)=>(b.updated||0)-(a.updated||0));
@@ -1164,7 +1235,7 @@ function renderBoard(){
 function blankItem(extra){
   return Object.assign({id:uid("it"),title:"",category:(settings.categories[0]||{}).id||"",status:(settings.statuses[0]||{}).id||"",
     date:"",time:"",slot:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",players:"",caption:"",notes:"",
-    views:null,saves:null,shares:null,follows:null,pstats:{},created:Date.now(),updated:Date.now()},extra||{});
+    draft:false,wasDate:"",views:null,saves:null,shares:null,follows:null,pstats:{},created:Date.now(),updated:Date.now()},extra||{});
 }
 function renderBank(){
   const titles=new Set(Object.values(items).map(it=>(it.title||"").toLowerCase()));
@@ -1364,11 +1435,11 @@ function renderStats(){
         const label=miss[0]==="?"?"No platforms picked yet":"Missing: "+miss.map(id=>platById(id).name).join(", ");
         const tl=timeLabel(it);
         return `<div class="mpost" data-m="${it.id}" style="--c:${esc(catColor(it))}">
-          <div class="mpost-head"><strong>${esc(it.title||"Untitled")}</strong><small>${shortDate(it.date)}${tl?" · "+esc(tl):""}${(catById(it.category)||{}).name?" · "+esc(catById(it.category).name):""}</small><span class="need">${label}</span><button class="btn primary">Save</button></div>
+          <div class="mpost-head"><strong>${esc(it.title||"Untitled")}</strong><small>${shortDate(it.date)}${tl?" · "+esc(tl):""}${(catById(it.category)||{}).name?" · "+esc(catById(it.category).name):""}</small><span class="need">${label}</span><button class="btn ghost" data-todraft title="It didn't go out in the end">Didn't post · move to drafts</button><button class="btn primary" data-save>Save</button></div>
           <div class="pgrid">${pgridHTML(rows,it.pstats,false)}</div></div>`}).join("")}
       ${missing.length>15?`<p class="hint" style="margin:10px 0 0">Showing the 15 most recent.</p>`:""}
       <p class="foot">Tap <strong>DP</strong> if it didn't go up on that platform. It shows as <span class="star">*</span> in your stats.</p></div>`;
-    mb.querySelectorAll(".mpost[data-m]").forEach(r=>{wireDP(r);r.querySelector(".btn").onclick=()=>{
+    mb.querySelectorAll(".mpost[data-m]").forEach(r=>{wireDP(r);r.querySelector("[data-todraft]").onclick=()=>moveToDrafts(items[r.dataset.m]);r.querySelector("[data-save]").onclick=()=>{
       const it=items[r.dataset.m];if(!it)return;const add=readPgrid(r);
       if(!Object.keys(add).length){toast("Enter a number or tap DP first.");return}
       const pstats=Object.assign({},it.pstats||{},add);const up={pstats,updated:Date.now()};
@@ -1547,7 +1618,9 @@ function renderPlatToggles(sel){
 function openEditor(it,defaults){
   const isNew=!it;
   editing=isNew?blankItem(defaults):Object.assign(blankItem(),clone(it));editing._new=isNew;
-  $("#mtitle").textContent=isNew?(editing.date?"New post":"New idea"):(editing.date?"Edit post":"Edit idea");
+  $("#mtitle").textContent=editing.draft?(isNew?"New draft":"Edit draft"):isNew?(editing.date?"New post":"New idea"):(editing.date?"Edit post":"Edit idea");
+  $("#e-datehint").textContent=editing.draft?"(pick a date to put it on the calendar)":"(leave empty to keep as an idea)";
+  const db=$("#e-draft");db.style.display=editing.draft?"none":"";db.textContent=isNew?"Save as draft":"Move to drafts";
   $("#e-title").value=editing.title||"";
   setReadyUI(!!editing.ready);
   fillSelect($("#e-cat"),settings.categories,editing.category,"No category");
@@ -1597,8 +1670,14 @@ function readEditor(){
   if(Object.keys(ps).length)METRICS.forEach(k=>out[k]=null);
   return out;
 }
-$("#e-save").onclick=()=>{const it=readEditor(),wasNew=it._new;delete it._new;persistItem(it);closeEditor();renderAll();toast(wasNew?(it.date?"Post added":"Idea added"):"Changes saved")};
-$("#e-dup").onclick=()=>{const it=readEditor();delete it._new;it.id=uid("it");it.title+=" (copy)";it.created=Date.now();METRICS.forEach(k=>it[k]=null);it.pstats={};persistItem(it);closeEditor();renderAll();toast("Duplicated")};
+$("#e-save").onclick=()=>{const it=readEditor(),wasNew=it._new,wasDraft=!!it.draft;delete it._new;
+  if(it.draft&&it.date){it.draft=false}
+  persistItem(it);closeEditor();renderAll();
+  toast(wasDraft&&it.date?"Added to the calendar for "+shortDate(it.date):wasDraft?(wasNew?"Draft added":"Draft saved"):wasNew?(it.date?"Post added":"Idea added"):"Changes saved")};
+$("#e-draft").onclick=async()=>{if(!editing)return;const it=readEditor();
+  if(it._new){delete it._new;const d=draftUpdate(it);d.wasDate="";persistItem(d);closeEditor();renderAll();toast("Saved as a draft");return}
+  delete it._new;await moveToDrafts(it,true)};
+$("#e-dup").onclick=()=>{const it=readEditor();delete it._new;it.id=uid("it");it.title+=" (copy)";it.created=Date.now();it.wasDate="";METRICS.forEach(k=>it[k]=null);it.pstats={};persistItem(it);closeEditor();renderAll();toast("Duplicated")};
 $("#e-delete").onclick=async()=>{if(!editing)return;const id=editing.id;
   if(!await askConfirm(`"${editing.title||"Untitled"}" will be deleted for good.`))return;
   removeItem(id);closeEditor();renderAll();toast("Deleted")};
