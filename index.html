@@ -596,7 +596,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
 
   <!-- Stats -->
   <section class="view" id="view-stats">
-    <div class="page-head"><h2>Stats</h2><span class="hint">Results from every dated post. Tap any row to open the post.</span></div>
+    <div class="page-head"><h2>Stats</h2><span class="hint">Results from posts that have gone up. Scheduled posts join once their post time passes. Tap any row to open the post.</span></div>
     <div class="statbar">
       <select id="speriod" aria-label="Period">
         <option value="thisweek">This week</option>
@@ -889,6 +889,13 @@ function dueAt(it){
   if(t){const [hh,mm]=t.split(":").map(Number);d.setHours(hh||0,mm||0,0,0);return new Date(d.getTime()+864e5)}
   return addDays(d,1);
 }
+/* Has it actually gone up? Its post time has passed (end of the day if no time is set), or results are already logged */
+function postedAt(it){
+  const d=parseYmd(it.date);const t=it.time||(SLOTS[it.slot]?SLOTS[it.slot].t:"");
+  if(t){const [hh,mm]=t.split(":").map(Number);d.setHours(hh||0,mm||0,0,0);return d}
+  d.setHours(23,59,59,0);return d;
+}
+function isPosted(it){return !!it.date&&!it.draft&&(hasStats(it)||new Date()>=postedAt(it))}
 function hasSplit(it){return PLATFORMS.some(p=>hasPlat(it,p.id))}
 function hasLegacy(it){return !hasSplit(it)&&METRICS.some(k=>num(it[k])!==null)}
 function hasStats(it){return hasSplit(it)||hasLegacy(it)}
@@ -1333,11 +1340,11 @@ function statRange(){
 }
 function statItems(){
   const[f,t]=statRange();
-  return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
+  return Object.values(items).filter(it=>isPosted(it)&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
 }
 function avgViews(s){return s.logged?fmt(Math.round(s.views/s.logged)):"–"}
 function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={logged:list.filter(it=>mval(it,"views",plat)!==null).length,posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
-function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
+function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>isPosted(it)&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
 function groupKeyG(ds,g){
   if(g==="month")return ds.slice(0,7);
   if(g==="day")return ds;
