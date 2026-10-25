@@ -460,17 +460,44 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);background:var(--navy-deep);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:80;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translateX(-50%)}
 
+/* Tasks, For approval, Videos shot */
+.late{color:var(--down);font-weight:700}
+.chip b{font-weight:700;color:var(--muted);margin-left:2px}
+.vwrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.vtable{width:100%;border-collapse:collapse;font-size:14px}
+.vtable th{text-align:left;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface-2);padding:10px 12px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.vtable td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.vtable tr:last-child td{border-bottom:0}
+.vtable tbody tr{cursor:pointer}
+.vtable tbody tr:hover td{background:var(--surface-2)}
+.vtable .vt{font-weight:600;border-left:5px solid var(--c,#888)}
+.vtable .plans{color:var(--muted);max-width:320px;white-space:pre-wrap}
+.vtable a{color:var(--orange);font-weight:600;text-decoration:none}
+
 @media (max-width:1100px){
   .year{grid-template-columns:repeat(3,minmax(0,1fr))}
   .days{grid-template-columns:repeat(min(var(--cols,7),4),minmax(0,1fr))}
   .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .top-inner{flex-wrap:wrap;gap:8px 12px}
+  .tabs{margin-left:0;width:100%;order:3;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .sync{margin-left:auto}
 }
 @media (max-width:760px){
   .top-inner{flex-wrap:wrap;gap:8px 12px;padding:10px 14px}
   .brand img{height:38px}
   .brand-text strong{font-size:21px}
   .tabs{margin-left:0;width:100%;order:3}
-  .tab{flex:1;padding:8px 4px;font-size:14px}
+  .tab{flex:0 0 auto;padding:8px 10px;font-size:14px}
+  .vtable thead{display:none}
+  .vtable,.vtable tbody,.vtable tr,.vtable td{display:block;width:100%}
+  .vtable tr{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .vtable tr:last-child{border-bottom:0}
+  .vtable td{padding:2px 0;border:0}
+  .vtable tbody tr:hover td{background:none}
+  .vtable .vt{padding-left:8px;margin-bottom:4px}
+  .vtable td[data-l]::before{content:attr(data-l) ": ";color:var(--muted);font-weight:600}
+  .vtable .plans{max-width:none}
   .sync{margin-left:auto}
   main{padding:18px 12px 60px}
   .period{font-size:28px;width:100%;margin:4px 0}
@@ -525,6 +552,9 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <button class="tab" role="tab" data-tab="calendar" aria-selected="true">Calendar</button>
       <button class="tab" role="tab" data-tab="ideas" aria-selected="false">Ideas</button>
       <button class="tab" role="tab" data-tab="drafts" aria-selected="false">Drafts</button>
+      <button class="tab" role="tab" data-tab="tasks" aria-selected="false">Tasks</button>
+      <button class="tab" role="tab" data-tab="approvals" aria-selected="false">For approval</button>
+      <button class="tab" role="tab" data-tab="shoots" aria-selected="false">Videos shot</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button class="tab" role="tab" data-tab="settings" aria-selected="false">Settings</button>
       <a class="tab tab-link" href="learn.html">Learn</a>
@@ -594,9 +624,48 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
     <div id="drafts"></div>
   </section>
 
+  <!-- Tasks -->
+  <section class="view" id="view-tasks">
+    <div class="page-head">
+      <h2>Tasks</h2>
+      <span class="hint">What everyone's working on and where it's at. Drag a task to move it, or open it to change the stage.</span>
+      <span style="flex:1"></span>
+      <div class="seg" id="taskgroup">
+        <button data-group="stage" aria-pressed="true">By stage</button>
+        <button data-group="person" aria-pressed="false">By person</button>
+      </div>
+      <button class="btn primary" id="newtask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New task</button>
+    </div>
+    <div class="filters" id="taskfilters"></div>
+    <div class="board" id="taskboard"></div>
+  </section>
+
+  <!-- For approval -->
+  <section class="view" id="view-approvals">
+    <div class="page-head">
+      <h2>For approval</h2>
+      <span class="hint">Work waiting for a yes. Add the expected date and the Google Drive link.</span>
+      <span style="flex:1"></span>
+      <button class="btn primary" id="newapproval"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Send for approval</button>
+    </div>
+    <div class="board" id="approvalboard"></div>
+  </section>
+
+  <!-- Videos shot -->
+  <section class="view" id="view-shoots">
+    <div class="page-head">
+      <h2>Videos shot</h2>
+      <span class="hint">Every video filmed: where it's at, the plan, the type and who has it.</span>
+      <span style="flex:1"></span>
+      <button class="btn primary" id="newshoot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add video</button>
+    </div>
+    <div class="filters" id="shootfilters"></div>
+    <div id="shootbody"></div>
+  </section>
+
   <!-- Stats -->
   <section class="view" id="view-stats">
-    <div class="page-head"><h2>Stats</h2><span class="hint">Results from posts that have gone up. Scheduled posts join once their post time passes. Tap any row to open the post.</span></div>
+    <div class="page-head"><h2>Stats</h2><span class="hint">Results from every dated post. Tap any row to open the post.</span></div>
     <div class="statbar">
       <select id="speriod" aria-label="Period">
         <option value="thisweek">This week</option>
@@ -706,6 +775,24 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
         <div class="addrow"><input type="text" id="newemail" placeholder="name@gmail.com" inputmode="email" autocomplete="off"><button class="btn primary" id="addemail">Add</button></div>
       </div>
       <div class="panel">
+        <h3>Task stages</h3>
+        <p class="sub">The columns on the Tasks tab, in order.</p>
+        <div id="taskstagelist"></div>
+        <div class="addrow"><input type="text" id="newtaskstage" placeholder="New stage name"><button class="btn primary" id="addtaskstage">Add</button></div>
+      </div>
+      <div class="panel">
+        <h3>Approval stages</h3>
+        <p class="sub">The columns on the For approval tab, in order.</p>
+        <div id="approvalstagelist"></div>
+        <div class="addrow"><input type="text" id="newapprovalstage" placeholder="New stage name"><button class="btn primary" id="addapprovalstage">Add</button></div>
+      </div>
+      <div class="panel">
+        <h3>Video stages</h3>
+        <p class="sub">Where a shot video can be at, on the Videos shot tab.</p>
+        <div id="shootstagelist"></div>
+        <div class="addrow"><input type="text" id="newshootstage" placeholder="New stage name"><button class="btn primary" id="addshootstage">Add</button></div>
+      </div>
+      <div class="panel">
         <h3>Backup and moving</h3>
         <p class="sub">Download everything as a file, or load a backup on another device or site.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -778,6 +865,22 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   </div>
 </div>
 
+<!-- Task / approval / video editor -->
+<div class="scrim" id="rscrim" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rtitle" id="reditor">
+    <div class="modal-head"><h2 id="rtitle">New task</h2>
+      <button class="btn ghost icon" id="rclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="modal-body" id="rbody"></div>
+    <div class="modal-foot">
+      <button class="btn danger" id="r-delete">Delete</button>
+      <button class="btn ghost" id="r-extra"></button>
+      <span class="spacer"></span>
+      <button class="btn" id="r-cancel">Cancel</button>
+      <button class="btn primary" id="r-save">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Confirm -->
 <div class="scrim" id="cscrim" aria-hidden="true" style="align-items:center">
   <div class="modal confirm" role="alertdialog" aria-modal="true" aria-labelledby="ctitle">
@@ -819,7 +922,56 @@ const DEFAULT_SETTINGS={
     {id:"st-scheduled",name:"Scheduled",color:"#3D6CE0"},
     {id:"st-posted",name:"Posted",color:"#16A34A"}
   ],
-  people:[{id:"p-milo",name:"Milo"}]
+  people:[{id:"p-milo",name:"Milo"}],
+  taskStages:[
+    {id:"ts-todo",name:"To do",color:"#8A90B8"},
+    {id:"ts-doing",name:"In progress",color:"#E8A317"},
+    {id:"ts-waiting",name:"Waiting on someone",color:"#7B4FD6"},
+    {id:"ts-done",name:"Done",color:"#16A34A"}
+  ],
+  approvalStages:[
+    {id:"as-waiting",name:"Waiting for approval",color:"#E8A317"},
+    {id:"as-changes",name:"Changes needed",color:"#E0317A"},
+    {id:"as-approved",name:"Approved",color:"#16A34A"}
+  ],
+  shootStages:[
+    {id:"ss-footage",name:"Footage in",color:"#8A90B8"},
+    {id:"ss-picking",name:"Picking clips",color:"#E8A317"},
+    {id:"ss-editing",name:"Editing",color:"#FF5A00"},
+    {id:"ss-ready",name:"Ready to post",color:"#3D6CE0"},
+    {id:"ss-posted",name:"Posted",color:"#16A34A"}
+  ]
+};
+/* Tasks, approvals and videos shot are saved in the "items" collection with a "kind" field, so they use the same database rules as posts */
+const STAGE_LISTS=["taskStages","approvalStages","shootStages"];
+const REC={
+  task:{label:"task",stages:"taskStages",dateKey:"due",dateLabel:"Due",fields:[
+    {k:"title",type:"title",label:"Task",ph:"e.g. Edit the Tralee highlights"},
+    {k:"person",type:"person",label:"Who's on it"},
+    {k:"stage",type:"stage",label:"Stage"},
+    {k:"due",type:"date",label:"Due date"},
+    {k:"link",type:"url",label:"Link",ph:"Optional: Google Drive, Frame.io or any link"},
+    {k:"notes",type:"textarea",label:"Notes",ph:"What's left to do"}
+  ]},
+  approval:{label:"approval",stages:"approvalStages",dateKey:"expected",dateLabel:"Expected",fields:[
+    {k:"title",type:"title",label:"What needs approving",ph:"e.g. Tralee game highlights v2"},
+    {k:"category",type:"category",label:"Type"},
+    {k:"stage",type:"stage",label:"Stage"},
+    {k:"expected",type:"date",label:"Expected date",hint:"(when it should go out)"},
+    {k:"person",type:"person",label:"Sent by"},
+    {k:"link",type:"url",label:"Google Drive link",ph:"Paste the Google Drive link"},
+    {k:"notes",type:"textarea",label:"Notes and feedback",ph:"What to check, or the changes asked for"}
+  ]},
+  shoot:{label:"video",stages:"shootStages",dateKey:"shotOn",dateLabel:"Shot",fields:[
+    {k:"title",type:"title",label:"What we shot",ph:"e.g. Training session, 21 Oct"},
+    {k:"shotOn",type:"date",label:"Date shot"},
+    {k:"category",type:"category",label:"Type of video"},
+    {k:"stage",type:"stage",label:"Where it's at"},
+    {k:"person",type:"person",label:"Who's working on it"},
+    {k:"link",type:"url",label:"Footage link",ph:"Paste the Google Drive folder link"},
+    {k:"plans",type:"textarea",label:"Plans for it",ph:"What it becomes: the cut, the hook, which clips"},
+    {k:"notes",type:"textarea",label:"Notes",ph:"Anything else"}
+  ]}
 };
 const BANK={
   "Game previews":["Opponent scouting: record, top scorer, last meeting","3 keys to the game","Head-to-head history","Matchup to watch: two players side by side","Game day info card: time, venue, stream, tickets","Predicted starting five with a fact each"],
@@ -838,6 +990,8 @@ let range={from:ymd(startOfDay(new Date())),to:ymd(addDays(startOfDay(new Date()
 let hiddenCats=new Set(), sHiddenCats=new Set();
 let stat={pmetric:"views",pgroup:"day",bmetric:"views",split:"category",open:new Set(),period:"thismonth",from:"",to:"",plat:"",group:"week",metric:"views",sort:{key:"date",dir:-1}};
 let editing=null;
+let recs={task:{},approval:{},shoot:{}}, recEditing=null;
+let taskGroup="stage", taskPerson="all", shootFilter="all";
 const TOUCH=window.matchMedia("(pointer: coarse)").matches;
 
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -889,13 +1043,6 @@ function dueAt(it){
   if(t){const [hh,mm]=t.split(":").map(Number);d.setHours(hh||0,mm||0,0,0);return new Date(d.getTime()+864e5)}
   return addDays(d,1);
 }
-/* Has it actually gone up? Its post time has passed (end of the day if no time is set), or results are already logged */
-function postedAt(it){
-  const d=parseYmd(it.date);const t=it.time||(SLOTS[it.slot]?SLOTS[it.slot].t:"");
-  if(t){const [hh,mm]=t.split(":").map(Number);d.setHours(hh||0,mm||0,0,0);return d}
-  d.setHours(23,59,59,0);return d;
-}
-function isPosted(it){return !!it.date&&!it.draft&&(hasStats(it)||new Date()>=postedAt(it))}
 function hasSplit(it){return PLATFORMS.some(p=>hasPlat(it,p.id))}
 function hasLegacy(it){return !hasSplit(it)&&METRICS.some(k=>num(it[k])!==null)}
 function hasStats(it){return hasSplit(it)||hasLegacy(it)}
@@ -944,14 +1091,18 @@ function fail(e){
   else toast("Couldn't save that change. Check your connection and try again.");
 }
 function normalizeSettings(s){
-  return{categories:Array.isArray(s.categories)?s.categories:clone(DEFAULT_SETTINGS.categories),
+  const out={categories:Array.isArray(s.categories)?s.categories:clone(DEFAULT_SETTINGS.categories),
     statuses:Array.isArray(s.statuses)&&s.statuses.length?s.statuses:clone(DEFAULT_SETTINGS.statuses),
     people:Array.isArray(s.people)?s.people:[],
     followers:Array.isArray(s.followers)?s.followers:[]};
+  STAGE_LISTS.forEach(k=>{out[k]=Array.isArray(s[k])&&s[k].length?s[k]:clone(DEFAULT_SETTINGS[k])});
+  return out;
 }
 function persistSettings(){setDoc(settingsRef,clone(settings)).catch(fail)}
 function persistItem(it){items[it.id]=it;const body=clone(it);delete body._new;setDoc(doc(fdb,"items",it.id),body).catch(fail)}
 function removeItem(id){delete items[id];deleteDoc(doc(fdb,"items",id)).catch(fail)}
+function persistRec(r){recs[r.kind][r.id]=r;setDoc(doc(fdb,"items",r.id),clone(r)).catch(fail)}
+function removeRec(r){delete recs[r.kind][r.id];deleteDoc(doc(fdb,"items",r.id)).catch(fail)}
 
 /* Gate */
 const GOOGLE_ICON='<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
@@ -999,7 +1150,11 @@ function startListening(){
     if(s.exists()){settings=normalizeSettings(s.data());renderAll()}
     else if(!s.metadata.fromCache){settings=clone(DEFAULT_SETTINGS);persistSettings();renderAll()}
   },listenErr));
-  unsubs.push(onSnapshot(collection(fdb,"items"),s=>{const n={};s.forEach(d=>{n[d.id]=Object.assign({},d.data(),{id:d.id})});items=n;renderAll()},listenErr));
+  unsubs.push(onSnapshot(collection(fdb,"items"),s=>{
+    const n={},r={task:{},approval:{},shoot:{}};
+    s.forEach(d=>{const v=Object.assign({},d.data(),{id:d.id});if(v.kind&&r[v.kind])r[v.kind][d.id]=v;else n[d.id]=v});
+    items=n;recs=r;renderAll();
+  },listenErr));
   $("#sync").textContent=me.displayName?me.displayName.split(" ")[0]:me.email;$("#sync").classList.add("shared");
   $("#modeinfo").textContent="Signed in as "+me.email+". Changes save automatically and everyone on the list sees them live.";
   hideGate();
@@ -1073,7 +1228,7 @@ document.querySelectorAll(".tab[data-tab]").forEach(t=>t.addEventListener("click
 }));
 
 /* ---------- Rendering ---------- */
-function renderAll(){renderFilters();renderCalendar();renderBoard();renderDrafts();renderBank();renderStats();renderSettings()}
+function renderAll(){renderFilters();renderCalendar();renderBoard();renderDrafts();renderBank();renderStats();renderTasks();renderApprovals();renderShoots();renderSettings()}
 function visibleDated(){return Object.values(items).filter(it=>it.date&&!hiddenCats.has(it.category||"none"))}
 function itemsOn(ds){
   return visibleDated().filter(it=>it.date===ds).sort((a,b)=>sortTime(a).localeCompare(sortTime(b))||(a.created||0)-(b.created||0));
@@ -1340,11 +1495,11 @@ function statRange(){
 }
 function statItems(){
   const[f,t]=statRange();
-  return Object.values(items).filter(it=>isPosted(it)&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
+  return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none")&&(!stat.plat||(it.platforms||[]).includes(stat.plat)||hasPlat(it,stat.plat)));
 }
 function avgViews(s){return s.logged?fmt(Math.round(s.views/s.logged)):"–"}
 function sumOf(list,plat){if(plat===undefined)plat=stat.plat;const s={logged:list.filter(it=>mval(it,"views",plat)!==null).length,posts:list.filter(it=>plat?!isDP(it,plat):!allDP(it)).length,views:0,saves:0,shares:0,follows:0};list.forEach(it=>METRICS.forEach(k=>s[k]+=mval(it,k,plat)||0));return s}
-function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>isPosted(it)&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
+function periodItems(){const[f,t]=statRange();return Object.values(items).filter(it=>it.date&&it.date>=f&&it.date<=t&&!sHiddenCats.has(it.category||"none"))}
 function groupKeyG(ds,g){
   if(g==="month")return ds.slice(0,7);
   if(g==="day")return ds;
@@ -1723,6 +1878,26 @@ function renderSettings(){
       settings.people.splice(i,1);persistSettings();renderAll();toast("Removed")};
     r.querySelector(".danger").onclick=del;r.oncontextmenu=e=>{if(e.target.tagName!=="INPUT"){e.preventDefault();del()}};
   });
+  [["#taskstagelist","task"],["#approvalstagelist","approval"],["#shootstagelist","shoot"]].forEach(([el,kind])=>stageListEditor($(el),kind));
+}
+function stageListEditor(el,kind){
+  const list=settings[REC[kind].stages];
+  el.innerHTML=list.map((s,i)=>`<div class="rowedit" data-i="${i}">
+    <input type="color" value="${esc(s.color)}" aria-label="Colour for ${esc(s.name)}"><input type="text" value="${esc(s.name)}" aria-label="Stage name">
+    <button class="btn ghost icon" data-mv="-1" aria-label="Move up" ${i===0?"disabled":""}>↑</button>
+    <button class="btn ghost icon" data-mv="1" aria-label="Move down" ${i===list.length-1?"disabled":""}>↓</button>
+    <button class="btn danger icon" aria-label="Delete ${esc(s.name)}">${trash()}</button></div>`).join("");
+  el.querySelectorAll(".rowedit").forEach(r=>{
+    const i=+r.dataset.i,[col,txt]=r.querySelectorAll("input");
+    col.onchange=()=>{list[i].color=col.value;persistSettings();renderAll()};
+    txt.onchange=()=>{list[i].name=txt.value.trim()||"Untitled";persistSettings();renderAll()};
+    r.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{const j=i+ +b.dataset.mv;[list[i],list[j]]=[list[j],list[i]];persistSettings();renderAll()});
+    const del=async()=>{if(list.length<=1){toast("Keep at least one stage.");return}
+      const s=list[i];const n=Object.values(recs[kind]).filter(x=>x.stage===s.id).length;
+      if(!await askConfirm(`Delete the "${s.name}" stage?${n?` ${n} ${REC[kind].label}${n>1?"s":""} will need a new stage.`:""}`))return;
+      list.splice(i,1);persistSettings();renderAll();toast("Stage deleted")};
+    r.querySelector(".danger").onclick=del;r.oncontextmenu=e=>{if(e.target.tagName!=="INPUT"){e.preventDefault();del()}};
+  });
 }
 const PALETTE=["#FF5A00","#2F37B5","#E0317A","#1E9E6A","#7B4FD6","#E8A317","#3D6CE0","#C4520F","#0FA3B1"];
 function addFromInput(inp,listName,prefix){
@@ -1733,7 +1908,10 @@ function addFromInput(inp,listName,prefix){
 $("#addcat").onclick=()=>addFromInput($("#newcat"),"categories","cat");
 $("#addstatus").onclick=()=>addFromInput($("#newstatus"),"statuses","st");
 $("#addperson").onclick=()=>addFromInput($("#newperson"),"people","p");
-[["#newcat","#addcat"],["#newstatus","#addstatus"],["#newperson","#addperson"]].forEach(([i,b])=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")$(b).click()}));
+$("#addtaskstage").onclick=()=>addFromInput($("#newtaskstage"),"taskStages","ts");
+$("#addapprovalstage").onclick=()=>addFromInput($("#newapprovalstage"),"approvalStages","as");
+$("#addshootstage").onclick=()=>addFromInput($("#newshootstage"),"shootStages","ss");
+[["#newcat","#addcat"],["#newstatus","#addstatus"],["#newperson","#addperson"],["#newtaskstage","#addtaskstage"],["#newapprovalstage","#addapprovalstage"],["#newshootstage","#addshootstage"]].forEach(([i,b])=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")$(b).click()}));
 
 /* ---------- Editor ---------- */
 function fillSelect(sel,list,val,emptyLabel){
@@ -1842,9 +2020,205 @@ $("#e-cancel").onclick=closeEditor;$("#mclose").onclick=closeEditor;
 $("#scrim").addEventListener("mousedown",e=>{if(e.target===$("#scrim"))closeEditor()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#cscrim").classList.contains("open"))closeConfirm(false);else if(editing)closeEditor()}});
 
+/* ---------- Tasks, For approval, Videos shot ---------- */
+const recStage=(kind,id)=>settings[REC[kind].stages].find(s=>s.id===id);
+const lastStageId=kind=>{const l=settings[REC[kind].stages];return (l[l.length-1]||{}).id};
+function recColor(kind,r){
+  const c=catById(r.category),st=recStage(kind,r.stage);
+  return kind==="task"?(st?st.color:"#8A90B8"):(c?c.color:(st?st.color:"#8A90B8"));
+}
+function recCardHTML(kind,r,show){
+  const cfg=REC[kind],st=recStage(kind,r.stage),p=personById(r.person),c=catById(r.category),ds=r[cfg.dateKey];
+  const late=ds&&kind!=="shoot"&&ds<todayStr()&&r.stage!==lastStageId(kind);
+  const bits=[];
+  if(show.stage&&st)bits.push(stagePill(st));
+  if(c&&kind!=="task")bits.push(`<span>${esc(c.name)}</span>`);
+  if(ds)bits.push(`<span class="${late?"late":""}">${esc(cfg.dateLabel)} ${esc(shortDate(ds))}</span>`);
+  if(r.link)bits.push('<span class="linkmark" title="Has a link">▶</span>');
+  if(show.person&&p)bits.push(`<span class="who"><b title="${esc(p.name)}">${esc(initials(p.name))}</b></span>`);
+  return `<div class="card" role="button" tabindex="0" ${TOUCH?"":'draggable="true"'} data-rid="${r.id}" style="--c:${esc(recColor(kind,r))}">
+    <span class="t"><span class="tt">${esc(r.title||"Untitled")}</span></span><span class="m">${bits.join("")}</span></div>`;
+}
+function sortRecs(kind,list){
+  const k=REC[kind].dateKey;
+  return list.sort((a,b)=>(a[k]||"9999").localeCompare(b[k]||"9999")||(b.updated||0)-(a.updated||0));
+}
+function recBoardHTML(kind,cols,field,show,list){
+  return cols.map(col=>{
+    const inCol=sortRecs(kind,list.filter(r=>(r[field]||"")===col.id)),color=col.color||"#8A90B8";
+    return `<div class="col" data-rdrop="${esc(col.id)}" style="--s:${esc(color)};--st:${textOn(color)}"><h3>${esc(col.name)}<small>${inCol.length}</small></h3>
+      ${inCol.map(r=>recCardHTML(kind,r,show)).join("")}<button class="more" data-radd="${esc(col.id)}">+ Add ${esc(REC[kind].label)}</button></div>`;
+  }).join("");
+}
+function wireRecBoard(root,kind,field){
+  root.querySelectorAll("[data-rid]").forEach(el=>{
+    const open=()=>openRec(kind,recs[kind][el.dataset.rid]);
+    el.addEventListener("click",open);
+    el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}});
+    if(el.getAttribute("draggable")==="true"){
+      el.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",el.dataset.rid);e.dataTransfer.effectAllowed="move";el.classList.add("dragging")});
+      el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+    }
+  });
+  root.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>{
+    const d={[field]:b.dataset.radd};if(kind==="task"&&field==="stage"&&taskPerson!=="all")d.person=taskPerson;
+    openRec(kind,null,d);
+  });
+  root.querySelectorAll("[data-rdrop]").forEach(z=>{
+    z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("over")});
+    z.addEventListener("dragleave",e=>{if(!z.contains(e.relatedTarget))z.classList.remove("over")});
+    z.addEventListener("drop",e=>{
+      e.preventDefault();z.classList.remove("over");
+      const r=recs[kind][e.dataTransfer.getData("text/plain")];if(!r)return;
+      const val=z.dataset.rdrop;if((r[field]||"")===val)return;
+      persistRec(Object.assign({},r,{[field]:val,updated:Date.now()}));renderAll();
+      toast("Moved to "+(field==="person"?((personById(val)||{}).name||"Nobody yet"):((recStage(kind,val)||{}).name||"No stage")));
+    });
+  });
+}
+function renderTasks(){
+  document.querySelectorAll("#taskgroup button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.group===taskGroup));
+  const all=Object.values(recs.task),fl=$("#taskfilters"),board=$("#taskboard");
+  if(taskGroup==="stage"){
+    const opts=[{id:"all",name:"Everyone"}].concat(settings.people);
+    if(taskPerson!=="all"&&!personById(taskPerson))taskPerson="all";
+    fl.style.display="";
+    fl.innerHTML=opts.map(p=>{const n=p.id==="all"?all.length:all.filter(t=>t.person===p.id).length;
+      return `<button class="chip" data-tp="${esc(p.id)}" aria-pressed="${taskPerson===p.id}" style="--cc:#2F37B5">${esc(p.name)} <b>${n}</b></button>`}).join("");
+    fl.querySelectorAll("[data-tp]").forEach(b=>b.onclick=()=>{taskPerson=b.dataset.tp;renderTasks()});
+    const list=taskPerson==="all"?all:all.filter(t=>t.person===taskPerson);
+    const known=new Set(settings.taskStages.map(s=>s.id)),cols=settings.taskStages.slice();
+    if(list.some(t=>!known.has(t.stage)))cols.push({id:"",name:"No stage"});
+    board.innerHTML=recBoardHTML("task",cols,"stage",{person:true},list.map(t=>known.has(t.stage)?t:Object.assign({},t,{stage:""})));
+    wireRecBoard(board,"task","stage");
+  }else{
+    fl.style.display="none";fl.innerHTML="";
+    const known=new Set(settings.people.map(p=>p.id));
+    const cols=settings.people.map(p=>({id:p.id,name:p.name,color:"#2F37B5"})).concat([{id:"",name:"Nobody yet"}]);
+    board.innerHTML=recBoardHTML("task",cols,"person",{stage:true},all.map(t=>known.has(t.person)?t:Object.assign({},t,{person:""})));
+    wireRecBoard(board,"task","person");
+  }
+}
+document.querySelectorAll("#taskgroup button").forEach(b=>b.onclick=()=>{taskGroup=b.dataset.group;renderTasks()});
+$("#newtask").onclick=()=>openRec("task",null,taskPerson!=="all"?{person:taskPerson}:{});
+function renderApprovals(){
+  const all=Object.values(recs.approval),known=new Set(settings.approvalStages.map(s=>s.id)),cols=settings.approvalStages.slice();
+  if(all.some(a=>!known.has(a.stage)))cols.push({id:"",name:"No stage"});
+  const board=$("#approvalboard");
+  board.innerHTML=recBoardHTML("approval",cols,"stage",{person:true},all.map(a=>known.has(a.stage)?a:Object.assign({},a,{stage:""})));
+  wireRecBoard(board,"approval","stage");
+}
+$("#newapproval").onclick=()=>openRec("approval",null);
+function renderShoots(){
+  const all=Object.values(recs.shoot);
+  if(shootFilter!=="all"&&!recStage("shoot",shootFilter))shootFilter="all";
+  const opts=[{id:"all",name:"All",color:"#2F37B5"}].concat(settings.shootStages);
+  $("#shootfilters").innerHTML=opts.map(s=>{const n=s.id==="all"?all.length:all.filter(v=>v.stage===s.id).length;
+    return `<button class="chip" data-sf="${esc(s.id)}" aria-pressed="${shootFilter===s.id}" style="--cc:${esc(s.color)}">${s.id==="all"?"":"<i></i>"}${esc(s.name)} <b>${n}</b></button>`}).join("");
+  $("#shootfilters").querySelectorAll("[data-sf]").forEach(b=>b.onclick=()=>{shootFilter=b.dataset.sf;renderShoots()});
+  const list=(shootFilter==="all"?all:all.filter(v=>v.stage===shootFilter)).sort((a,b)=>(b.shotOn||"").localeCompare(a.shotOn||"")||(b.created||0)-(a.created||0));
+  const body=$("#shootbody");
+  if(!list.length){
+    body.innerHTML=`<div class="empty">${all.length?"No videos at this stage.":"No videos logged yet. Add everything you film here so nothing gets lost."}<br><br><button class="btn primary" id="shootempty">Add video</button></div>`;
+    $("#shootempty").onclick=()=>openRec("shoot",null);return;
+  }
+  body.innerHTML=`<div class="vwrap"><table class="vtable"><thead><tr><th>Video</th><th>Shot</th><th>Type</th><th>Where it's at</th><th>Who's on it</th><th>Plans</th><th>Footage</th></tr></thead><tbody>${
+    list.map(v=>{const c=catById(v.category),st=recStage("shoot",v.stage),p=personById(v.person);
+      return `<tr data-vid="${v.id}" tabindex="0">
+        <td class="vt" style="--c:${esc(recColor("shoot",v))}">${esc(v.title||"Untitled")}</td>
+        <td data-l="Shot">${v.shotOn?esc(shortDate(v.shotOn)):"–"}</td>
+        <td data-l="Type">${c?esc(c.name):"–"}</td>
+        <td data-l="Where it's at">${st?stagePill(st):"–"}</td>
+        <td data-l="Who">${p?esc(p.name):"Nobody yet"}</td>
+        <td data-l="Plans" class="plans">${v.plans?esc(v.plans):"–"}</td>
+        <td data-l="Footage">${v.link?`<a href="${esc(v.link)}" target="_blank" rel="noopener" data-stop>Open ▶</a>`:"–"}</td></tr>`}).join("")
+  }</tbody></table></div>`;
+  body.querySelectorAll("tr[data-vid]").forEach(tr=>{
+    tr.onclick=e=>{if(e.target.closest("[data-stop]"))return;openRec("shoot",recs.shoot[tr.dataset.vid])};
+    tr.onkeydown=e=>{if(e.key==="Enter"&&e.target===tr)openRec("shoot",recs.shoot[tr.dataset.vid])};
+  });
+}
+$("#newshoot").onclick=()=>openRec("shoot",null);
+
+/* Editor for tasks, approvals and videos */
+function recFieldHTML(f){
+  const id="r-"+f.k,ph=esc(f.ph||"");
+  const lab=`<label class="f" for="${id}">${esc(f.label)}${f.hint?` <span style="font-weight:400">${esc(f.hint)}</span>`:""}</label>`;
+  let input;
+  if(f.type==="textarea")input=`<textarea id="${id}" rows="3" placeholder="${ph}"></textarea>`;
+  else if(f.type==="person"||f.type==="stage"||f.type==="category")input=`<select id="${id}"></select>`;
+  else if(f.type==="date")input=`<input type="date" id="${id}">`;
+  else if(f.type==="url")input=`<div class="linkrow"><input type="url" id="${id}" placeholder="${ph}"><a class="btn" id="${id}-open" target="_blank" rel="noopener">Open</a></div>`;
+  else input=`<input type="text" id="${id}"${f.type==="title"?' class="title-input"':""} placeholder="${ph}">`;
+  return `<div${f.type==="title"||f.type==="textarea"||f.type==="url"?' class="full"':""}>${lab}${input}</div>`;
+}
+function openRec(kind,r,defaults){
+  const cfg=REC[kind],isNew=!r;let rec;
+  if(isNew){
+    rec={id:uid(kind),kind,created:Date.now()};cfg.fields.forEach(f=>rec[f.k]="");
+    rec.stage=(settings[cfg.stages][0]||{}).id||"";Object.assign(rec,defaults||{});
+  }else rec=clone(r);
+  recEditing={kind,rec,isNew};
+  $("#rtitle").textContent=isNew?(kind==="approval"?"Send for approval":"New "+cfg.label):"Edit "+cfg.label;
+  $("#rbody").innerHTML=cfg.fields.map(recFieldHTML).join("");
+  cfg.fields.forEach(f=>{
+    const el=$("#r-"+f.k);
+    if(f.type==="person")fillSelect(el,settings.people,rec[f.k],"Nobody yet");
+    else if(f.type==="stage"){fillSelect(el,settings[cfg.stages],rec[f.k],null);if(!el.value&&settings[cfg.stages][0])el.value=settings[cfg.stages][0].id}
+    else if(f.type==="category")fillSelect(el,settings.categories,rec[f.k],"Not decided");
+    else el.value=rec[f.k]||"";
+  });
+  const sync=()=>{
+    const probe=Object.assign({},rec,{stage:$("#r-stage").value,category:$("#r-category")?$("#r-category").value:rec.category});
+    $("#reditor").style.setProperty("--c",recColor(kind,probe));
+    const url=$("#r-link").value.trim(),a=$("#r-link-open");
+    if(/^https?:\/\//i.test(url)){a.href=url;a.removeAttribute("aria-disabled");a.style.opacity=""}else{a.removeAttribute("href");a.setAttribute("aria-disabled","true");a.style.opacity=".45"}
+  };
+  ["#r-stage","#r-category","#r-link"].forEach(s=>{const el=$(s);if(el)el.addEventListener("input",sync)});
+  sync();
+  $("#r-delete").style.display=isNew?"none":"";
+  const extra=$("#r-extra");
+  if(kind==="approval"){extra.style.display="";extra.textContent="Put on calendar"}else extra.style.display="none";
+  $("#rscrim").classList.add("open");$("#rscrim").setAttribute("aria-hidden","false");
+  setTimeout(()=>$("#r-title").focus(),30);
+}
+function readRec(){
+  const {kind,rec}=recEditing,out=Object.assign({},rec,{kind,updated:Date.now()});
+  REC[kind].fields.forEach(f=>{
+    let v=$("#r-"+f.k).value;
+    if(f.type==="title")v=v.trim()||"Untitled";
+    if(f.type==="url"){v=v.trim();if(v&&!/^https?:\/\//i.test(v))v="https://"+v}
+    out[f.k]=v;
+  });
+  return out;
+}
+function closeRec(){$("#rscrim").classList.remove("open");$("#rscrim").setAttribute("aria-hidden","true");recEditing=null}
+$("#r-save").onclick=()=>{
+  const {kind,isNew}=recEditing,r=readRec();
+  persistRec(r);closeRec();renderAll();
+  toast(isNew?(kind==="approval"?"Sent for approval":"Added"):"Changes saved");
+};
+$("#r-delete").onclick=async()=>{
+  if(!recEditing)return;const r=recEditing.rec;
+  if(!await askConfirm(`"${r.title||"Untitled"}" will be deleted for good.`))return;
+  removeRec(r);closeRec();renderAll();toast("Deleted");
+};
+$("#r-extra").onclick=()=>{
+  if(!recEditing||recEditing.kind!=="approval")return;
+  const a=readRec();persistRec(a);
+  const ed=settings.statuses.find(x=>x.name.toLowerCase()==="edited");
+  const it=blankItem({title:a.title,category:catById(a.category)?a.category:"",status:ed?ed.id:((settings.statuses[0]||{}).id||""),
+    date:a.expected||todayStr(),link:a.link,workingOn:a.person||"",notes:a.notes||""});
+  persistItem(it);closeRec();renderAll();toast("Added to the calendar for "+shortDate(it.date));
+};
+$("#r-cancel").onclick=closeRec;$("#rclose").onclick=closeRec;
+$("#rscrim").addEventListener("mousedown",e=>{if(e.target===$("#rscrim"))closeRec()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&recEditing&&!$("#cscrim").classList.contains("open"))closeRec()});
+
 /* ---------- Backup ---------- */
 $("#export").onclick=()=>{
-  const data=JSON.stringify({app:"eanna-planner",version:2,exported:new Date().toISOString(),settings,items:Object.values(items)},null,2);
+  const all=Object.values(items).concat(...Object.keys(recs).map(k=>Object.values(recs[k])));
+  const data=JSON.stringify({app:"eanna-planner",version:2,exported:new Date().toISOString(),settings,items:all},null,2);
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download=`eanna-media-calendar-backup-${todayStr()}.json`;
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast("Backup downloaded");
 };
