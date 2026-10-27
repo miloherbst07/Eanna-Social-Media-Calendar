@@ -157,6 +157,8 @@ label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-b
 .who b{width:18px;height:18px;border-radius:50%;background:var(--navy);color:#fff;font-size:9.5px;display:inline-grid;place-items:center;margin-left:-4px;border:1.5px solid var(--surface)}
 .who b:first-child{margin-left:0}
 .linkmark{color:var(--orange);font-weight:700}
+.inspmark{color:var(--p-instagram);font-weight:700;text-decoration:none}
+a.inspmark:hover{text-decoration:underline}
 
 /* Month */
 .month{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
@@ -844,6 +846,8 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
       <div class="full"><label class="f">Posting on</label><div class="toggles" id="e-plats"></div></div>
       <div class="full"><label class="f" for="e-link">Video or file link</label>
         <div class="linkrow"><input type="url" id="e-link" placeholder="Paste a Google Drive, Dropbox or Frame.io link"><a class="btn" id="e-open" target="_blank" rel="noopener">Open</a></div></div>
+      <div class="full"><label class="f" for="e-insp">Inspiration <span style="font-weight:400">(a video that inspires this one)</span></label>
+        <div class="linkrow"><input type="url" id="e-insp" placeholder="Paste an Instagram, TikTok or YouTube link"><a class="btn" id="e-insp-open" target="_blank" rel="noopener">Open</a></div></div>
       <div><label class="f" for="e-working">Working on</label><select id="e-working"></select><div class="moreppl" data-f="workingOn"></div><button type="button" class="addppl" data-f="workingOn">+ Add another name</button></div>
       <div><label class="f" for="e-edited">Edited by</label><select id="e-edited"></select><div class="moreppl" data-f="editedBy"></div><button type="button" class="addppl" data-f="editedBy">+ Add another name</button></div>
       <div><label class="f" for="e-done">Done by</label><select id="e-done"></select><div class="moreppl" data-f="doneBy"></div><button type="button" class="addppl" data-f="doneBy">+ Add another name</button></div>
@@ -951,6 +955,7 @@ const REC={
     {k:"stage",type:"stage",label:"Stage"},
     {k:"due",type:"date",label:"Due date"},
     {k:"link",type:"url",label:"Link",ph:"Optional: Google Drive, Frame.io or any link"},
+    {k:"insp",type:"url",label:"Inspiration",hint:"(a video that inspires this one)",ph:"Paste an Instagram, TikTok or YouTube link"},
     {k:"notes",type:"textarea",label:"Notes",ph:"What's left to do"}
   ]},
   approval:{label:"approval",stages:"approvalStages",dateKey:"expected",dateLabel:"Expected",fields:[
@@ -960,6 +965,7 @@ const REC={
     {k:"expected",type:"date",label:"Expected date",hint:"(when it should go out)"},
     {k:"person",type:"person",label:"Sent by"},
     {k:"link",type:"url",label:"Google Drive link",ph:"Paste the Google Drive link"},
+    {k:"insp",type:"url",label:"Inspiration",hint:"(a video that inspires this one)",ph:"Paste an Instagram, TikTok or YouTube link"},
     {k:"notes",type:"textarea",label:"Notes and feedback",ph:"What to check, or the changes asked for"}
   ]},
   shoot:{label:"video",stages:"shootStages",dateKey:"shotOn",dateLabel:"Shot",fields:[
@@ -969,6 +975,7 @@ const REC={
     {k:"stage",type:"stage",label:"Where it's at"},
     {k:"person",type:"person",label:"Who's working on it"},
     {k:"link",type:"url",label:"Footage link",ph:"Paste the Google Drive folder link"},
+    {k:"insp",type:"url",label:"Inspiration",hint:"(a video that inspires this one)",ph:"Paste an Instagram, TikTok or YouTube link"},
     {k:"plans",type:"textarea",label:"Plans for it",ph:"What it becomes: the cut, the hook, which clips"},
     {k:"notes",type:"textarea",label:"Notes",ph:"Anything else"}
   ]}
@@ -1253,7 +1260,7 @@ function whoHTML(it){
 function cardHTML(it){
   return `<div class="card" role="button" tabindex="0" ${TOUCH?"":'draggable="true"'} data-id="${it.id}" style="--c:${esc(catColor(it))}">
     <span class="t">${readyBtn(it)}<span class="tt">${timeLabel(it)?esc(timeLabel(it))+" · ":""}${esc(it.title||"Untitled")}</span></span>
-    <span class="m">${stagePill(stById(it.status))}${platsHTML(it)}${it.link?'<span class="linkmark" title="Has a link">▶</span>':""}${whoHTML(it)}</span>
+    <span class="m">${stagePill(stById(it.status))}${platsHTML(it)}${it.link?'<span class="linkmark" title="Has a link">▶</span>':""}${it.insp?'<span class="inspmark" title="Has an inspiration video">✦</span>':""}${whoHTML(it)}</span>
   </div>`;
 }
 
@@ -1312,7 +1319,7 @@ function dayHTML(){
     const st=hasStats(it)?`<span>${fmt(mval(it,"views"))} views · ${fmt(mval(it,"saves"))} saves · ${fmt(mval(it,"shares"))} shares · ${fmt(mval(it,"follows"))} follows</span>`:"";
     return `<div class="dcard" role="button" tabindex="0" data-id="${it.id}" style="--c:${esc(catColor(it))}">
       <h4>${readyBtn(it)}${timeLabel(it)?esc(timeLabel(it))+" · ":""}${esc(it.title||"Untitled")}</h4>
-      <div class="row">${c?`<strong style="color:var(--ink)">${esc(c.name)}</strong>`:""}${stagePill(stById(it.status))}${platsHTML(it)}${ppl}${it.players?`<span>Featuring ${esc(it.players)}</span>`:""}${it.link?'<span class="linkmark">▶ Link attached</span>':""}${st}</div>
+      <div class="row">${c?`<strong style="color:var(--ink)">${esc(c.name)}</strong>`:""}${stagePill(stById(it.status))}${platsHTML(it)}${ppl}${it.players?`<span>Featuring ${esc(it.players)}</span>`:""}${it.link?'<span class="linkmark">▶ Link attached</span>':""}${it.insp?`<a class="inspmark" href="${esc(it.insp)}" target="_blank" rel="noopener">✦ Inspiration</a>`:""}${st}</div>
       ${it.notes?`<div class="notes">${esc(it.notes)}</div>`:""}</div>`}).join("")}
     <button class="btn" data-new="${ds}" style="margin-top:6px">Add another post</button></div>`;
 }
@@ -1338,6 +1345,7 @@ function wireItems(root){
     const id=el.dataset.id;let pressTimer=null,startX=0,startY=0,suppress=false;
     el.addEventListener("click",e=>{
       e.stopPropagation();
+      if(e.target.closest("a[href]"))return;
       if(suppress){suppress=false;return}
       const tog=e.target.closest("[data-toggle]");
       if(tog){toggleReady(id);return}
@@ -1467,7 +1475,7 @@ function renderBoard(){
 }
 function blankItem(extra){
   return Object.assign({id:uid("it"),title:"",category:(settings.categories[0]||{}).id||"",status:(settings.statuses[0]||{}).id||"",
-    date:"",time:"",slot:"",link:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",workingOnMore:[],editedByMore:[],doneByMore:[],players:"",caption:"",notes:"",
+    date:"",time:"",slot:"",link:"",insp:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",workingOnMore:[],editedByMore:[],doneByMore:[],players:"",caption:"",notes:"",
     draft:false,wasDate:"",views:null,saves:null,shares:null,follows:null,pstats:{},created:Date.now(),updated:Date.now()},extra||{});
 }
 function renderBank(){
@@ -1959,7 +1967,7 @@ function openEditor(it,defaults){
   fillSelect($("#e-cat"),settings.categories,editing.category,"No category");
   fillSelect($("#e-status"),settings.statuses,editing.status,null);
   if(!$("#e-status").value&&settings.statuses[0])$("#e-status").value=settings.statuses[0].id;
-  $("#e-date").value=editing.date||"";$("#e-time").value=editing.time||"";setSlotUI(editing.time?"":editing.slot||"");$("#e-link").value=editing.link||"";
+  $("#e-date").value=editing.date||"";$("#e-time").value=editing.time||"";setSlotUI(editing.time?"":editing.slot||"");$("#e-link").value=editing.link||"";$("#e-insp").value=editing.insp||"";
   renderPlatToggles(editing.platforms||[]);
   fillSelect($("#e-working"),settings.people,editing.workingOn,"Nobody yet");
   fillSelect($("#e-edited"),settings.people,editing.editedBy,"Nobody yet");
@@ -1977,10 +1985,12 @@ function openEditor(it,defaults){
 }
 function syncModalBits(){
   const c=catById($("#e-cat").value);$("#editor").style.setProperty("--c",c?c.color:"#9AA0C8");
-  const url=$("#e-link").value.trim(),a=$("#e-open");
-  if(/^https?:\/\//i.test(url)){a.href=url;a.style.opacity="";a.style.pointerEvents=""}else{a.removeAttribute("href");a.style.opacity=".45";a.style.pointerEvents="none"}
+  [["#e-link","#e-open"],["#e-insp","#e-insp-open"]].forEach(([i,o])=>{
+    const url=$(i).value.trim(),a=$(o);
+    if(/^https?:\/\//i.test(url)){a.href=url;a.style.opacity="";a.style.pointerEvents=""}else{a.removeAttribute("href");a.style.opacity=".45";a.style.pointerEvents="none"}
+  });
 }
-$("#e-cat").onchange=syncModalBits;$("#e-link").oninput=syncModalBits;
+$("#e-cat").onchange=syncModalBits;$("#e-link").oninput=syncModalBits;$("#e-insp").oninput=syncModalBits;
 document.querySelectorAll("[data-shift]").forEach(b=>b.onclick=()=>{
   const base=$("#e-date").value?parseYmd($("#e-date").value):startOfDay(new Date());$("#e-date").value=ymd(addDays(base,+b.dataset.shift));
 });
@@ -1992,9 +2002,10 @@ $("#e-cleartime").onclick=()=>{$("#e-time").value="";setSlotUI("")};
 function closeEditor(){$("#scrim").classList.remove("open");$("#scrim").setAttribute("aria-hidden","true");editing=null}
 function readEditor(){
   let link=$("#e-link").value.trim();if(link&&!/^https?:\/\//i.test(link))link="https://"+link;
+  let insp=$("#e-insp").value.trim();if(insp&&!/^https?:\/\//i.test(insp))insp="https://"+insp;
   const out=Object.assign({},editing,{
     title:$("#e-title").value.trim()||"Untitled",ready:$('#e-ready button[data-v="yes"]').getAttribute("aria-pressed")==="true",
-    category:$("#e-cat").value,status:$("#e-status").value,date:$("#e-date").value,time:$("#e-time").value,slot:$("#e-time").value?"":(document.querySelector('#e-slots [aria-pressed="true"]')||{dataset:{}}).dataset.slot||"",link,
+    category:$("#e-cat").value,status:$("#e-status").value,date:$("#e-date").value,time:$("#e-time").value,slot:$("#e-time").value?"":(document.querySelector('#e-slots [aria-pressed="true"]')||{dataset:{}}).dataset.slot||"",link,insp,
     platforms:[...document.querySelectorAll('#e-plats .tog[aria-pressed="true"]')].map(b=>b.dataset.p),
     workingOn:$("#e-working").value,editedBy:$("#e-edited").value,doneBy:$("#e-done").value,workingOnMore:readMorePpl("workingOn","#e-working"),editedByMore:readMorePpl("editedBy","#e-edited"),doneByMore:readMorePpl("doneBy","#e-done"),
     players:$("#e-players").value.trim(),caption:$("#e-caption").value,notes:$("#e-notes").value,updated:Date.now()});
@@ -2035,6 +2046,7 @@ function recCardHTML(kind,r,show){
   if(c&&kind!=="task")bits.push(`<span>${esc(c.name)}</span>`);
   if(ds)bits.push(`<span class="${late?"late":""}">${esc(cfg.dateLabel)} ${esc(shortDate(ds))}</span>`);
   if(r.link)bits.push('<span class="linkmark" title="Has a link">▶</span>');
+  if(r.insp)bits.push('<span class="inspmark" title="Has an inspiration video">✦</span>');
   if(show.person&&p)bits.push(`<span class="who"><b title="${esc(p.name)}">${esc(initials(p.name))}</b></span>`);
   return `<div class="card" role="button" tabindex="0" ${TOUCH?"":'draggable="true"'} data-rid="${r.id}" style="--c:${esc(recColor(kind,r))}">
     <span class="t"><span class="tt">${esc(r.title||"Untitled")}</span></span><span class="m">${bits.join("")}</span></div>`;
@@ -2122,7 +2134,7 @@ function renderShoots(){
     body.innerHTML=`<div class="empty">${all.length?"No videos at this stage.":"No videos logged yet. Add everything you film here so nothing gets lost."}<br><br><button class="btn primary" id="shootempty">Add video</button></div>`;
     $("#shootempty").onclick=()=>openRec("shoot",null);return;
   }
-  body.innerHTML=`<div class="vwrap"><table class="vtable"><thead><tr><th>Video</th><th>Shot</th><th>Type</th><th>Where it's at</th><th>Who's on it</th><th>Plans</th><th>Footage</th></tr></thead><tbody>${
+  body.innerHTML=`<div class="vwrap"><table class="vtable"><thead><tr><th>Video</th><th>Shot</th><th>Type</th><th>Where it's at</th><th>Who's on it</th><th>Plans</th><th>Inspiration</th><th>Footage</th></tr></thead><tbody>${
     list.map(v=>{const c=catById(v.category),st=recStage("shoot",v.stage),p=personById(v.person);
       return `<tr data-vid="${v.id}" tabindex="0">
         <td class="vt" style="--c:${esc(recColor("shoot",v))}">${esc(v.title||"Untitled")}</td>
@@ -2131,6 +2143,7 @@ function renderShoots(){
         <td data-l="Where it's at">${st?stagePill(st):"–"}</td>
         <td data-l="Who">${p?esc(p.name):"Nobody yet"}</td>
         <td data-l="Plans" class="plans">${v.plans?esc(v.plans):"–"}</td>
+        <td data-l="Inspiration">${v.insp?`<a class="inspmark" href="${esc(v.insp)}" target="_blank" rel="noopener" data-stop>✦ Watch</a>`:"–"}</td>
         <td data-l="Footage">${v.link?`<a href="${esc(v.link)}" target="_blank" rel="noopener" data-stop>Open ▶</a>`:"–"}</td></tr>`}).join("")
   }</tbody></table></div>`;
   body.querySelectorAll("tr[data-vid]").forEach(tr=>{
@@ -2171,10 +2184,12 @@ function openRec(kind,r,defaults){
   const sync=()=>{
     const probe=Object.assign({},rec,{stage:$("#r-stage").value,category:$("#r-category")?$("#r-category").value:rec.category});
     $("#reditor").style.setProperty("--c",recColor(kind,probe));
-    const url=$("#r-link").value.trim(),a=$("#r-link-open");
-    if(/^https?:\/\//i.test(url)){a.href=url;a.removeAttribute("aria-disabled");a.style.opacity=""}else{a.removeAttribute("href");a.setAttribute("aria-disabled","true");a.style.opacity=".45"}
+    cfg.fields.filter(f=>f.type==="url").forEach(f=>{
+      const url=$("#r-"+f.k).value.trim(),a=$("#r-"+f.k+"-open");
+      if(/^https?:\/\//i.test(url)){a.href=url;a.removeAttribute("aria-disabled");a.style.opacity=""}else{a.removeAttribute("href");a.setAttribute("aria-disabled","true");a.style.opacity=".45"}
+    });
   };
-  ["#r-stage","#r-category","#r-link"].forEach(s=>{const el=$(s);if(el)el.addEventListener("input",sync)});
+  ["#r-stage","#r-category","#r-link","#r-insp"].forEach(s=>{const el=$(s);if(el)el.addEventListener("input",sync)});
   sync();
   $("#r-delete").style.display=isNew?"none":"";
   const extra=$("#r-extra");
@@ -2208,7 +2223,7 @@ $("#r-extra").onclick=()=>{
   const a=readRec();persistRec(a);
   const ed=settings.statuses.find(x=>x.name.toLowerCase()==="edited");
   const it=blankItem({title:a.title,category:catById(a.category)?a.category:"",status:ed?ed.id:((settings.statuses[0]||{}).id||""),
-    date:a.expected||todayStr(),link:a.link,workingOn:a.person||"",notes:a.notes||""});
+    date:a.expected||todayStr(),link:a.link,insp:a.insp||"",workingOn:a.person||"",notes:a.notes||""});
   persistItem(it);closeRec();renderAll();toast("Added to the calendar for "+shortDate(it.date));
 };
 $("#r-cancel").onclick=closeRec;$("#rclose").onclick=closeRec;
