@@ -395,6 +395,43 @@ details.dd .dd-body>.block-head{margin-top:2px}
 @media (prefers-reduced-motion:reduce){details.dd>summary .tri{transition:none}}
 @media (max-width:640px){details.dd>summary .hint{margin-left:0;width:100%}}
 details.mini{margin-top:6px}
+/* audience */
+.aud-body{padding:0 16px 16px}
+.aud-note{font-size:13px;color:var(--muted);margin:10px 0 14px}
+.aud-note b{color:var(--ink)}
+.aud-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.aud-card{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.aud-card.wide{grid-column:1/-1}
+.aud-card h4{margin:0 0 8px;font-size:14px;display:flex;align-items:baseline;gap:8px}
+.aud-card h4 .hint{font-weight:400;font-size:12.5px}
+.gbar{display:flex;height:30px;border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.gbar span{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;min-width:0}
+.glegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.glegend span{display:inline-flex;align-items:center;gap:6px}
+.glegend i{width:10px;height:10px;border-radius:3px}
+table.aud{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+table.aud th{text-align:right;font-size:12px;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+table.aud th:first-child,table.aud td:first-child{text-align:left}
+table.aud td{padding:6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.aud tr:last-child td{border-bottom:0}
+table.aud td.comb{width:46%}
+.abar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.abar .trk{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;min-width:40px}
+.abar .trk i{display:block;height:100%;background:var(--orange);border-radius:4px}
+.abar b{min-width:44px;text-align:right}
+.aud-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.aud-form .aud-card input{padding:7px 9px;font-size:14px}
+.pcts{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.pcts label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:3px}
+.pctin{position:relative}
+.pctin input{padding-right:24px!important}
+.pctin::after{content:"%";position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.sumchk{font-size:12.5px;margin-top:8px;color:var(--muted)}
+.sumchk.bad{color:var(--down);font-weight:600}
+.locrow{display:grid;grid-template-columns:minmax(0,1fr) 92px 34px;gap:6px;margin-bottom:6px;align-items:center}
+.locrow .btn{padding:6px}
+.aud-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+@media (max-width:760px){.aud-grid,.aud-form{grid-template-columns:1fr}table.aud td.comb{width:auto}}
 details.mini>summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--burnt);padding:4px 0;list-style:none}
 details.mini>summary::-webkit-details-marker{display:none}
 details.mini>summary::before{content:"▸ ";color:var(--muted)}
@@ -689,6 +726,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
 
     <div class="tiles" id="tiles"></div>
     <details class="block fol" id="followers"></details>
+    <details class="block dd" id="audience" data-dd="audience"></details>
     <details class="block rem" id="missingblock"></details>
 
     <details class="block dd" data-dd="bestperforming">
@@ -1101,7 +1139,8 @@ function normalizeSettings(s){
   const out={categories:Array.isArray(s.categories)?s.categories:clone(DEFAULT_SETTINGS.categories),
     statuses:Array.isArray(s.statuses)&&s.statuses.length?s.statuses:clone(DEFAULT_SETTINGS.statuses),
     people:Array.isArray(s.people)?s.people:[],
-    followers:Array.isArray(s.followers)?s.followers:[]};
+    followers:Array.isArray(s.followers)?s.followers:[],
+    audience:s.audience&&typeof s.audience==="object"&&!Array.isArray(s.audience)?s.audience:{}};
   STAGE_LISTS.forEach(k=>{out[k]=Array.isArray(s[k])&&s[k].length?s[k]:clone(DEFAULT_SETTINGS[k])});
   return out;
 }
@@ -1694,6 +1733,136 @@ function renderFollowers(){
   });
 }
 
+/* ---------- Audience (men/women, age, location per platform, combined weighted by followers) ---------- */
+const AGES=["13-17","18-24","25-34","35-44","45-54","55+"];
+const ageId=k=>"aa-"+AGES.indexOf(k);
+const GENDERS=[{k:"men",name:"Men",color:"#2F37B5"},{k:"women",name:"Women",color:"#E0317A"},{k:"other",name:"Other",color:"#8A90B8"}];
+let audView="all";
+function audOf(p){return (settings.audience||{})[p]||null}
+function latestFollowers(p){const L=folList(p);return L.length?L[L.length-1].n:null}
+function hasGender(a){return !!a&&GENDERS.some(g=>num(a[g.k])!==null)}
+function hasAges(a){return !!a&&!!a.ages&&AGES.some(k=>num(a.ages[k])!==null)}
+function hasLocs(a,key){return !!a&&Array.isArray(a[key])&&a[key].length>0}
+/* Weights for one kind of data: only platforms that have that data and a follower number count, shared out by follower count */
+function audWeights(has){
+  const ps=PLATFORMS.filter(p=>has(audOf(p.id))&&latestFollowers(p.id)>0);
+  const tot=ps.reduce((s,p)=>s+latestFollowers(p.id),0);
+  const w={};ps.forEach(p=>w[p.id]=latestFollowers(p.id)/tot);return w;
+}
+function wsum(w,get){let s=0;Object.keys(w).forEach(p=>s+=w[p]*(get(audOf(p))||0));return s}
+const pct=v=>v===null||v===undefined?"–":(Math.round(v*10)/10).toLocaleString("en-IE")+"%";
+function locKey(n){return String(n||"").trim().toLowerCase()}
+function combinedLocs(key){
+  const w=audWeights(a=>hasLocs(a,key));const names={},tot={};
+  Object.keys(w).forEach(p=>(audOf(p)[key]||[]).forEach(r=>{const k=locKey(r.n);if(!k)return;names[k]=names[k]||String(r.n).trim();tot[k]=(tot[k]||0)+w[p]*(num(r.p)||0)}));
+  return {w,rows:Object.keys(tot).map(k=>({k,n:names[k],v:tot[k]})).sort((a,b)=>b.v-a.v)};
+}
+function locPct(p,key,k){const r=((audOf(p)||{})[key]||[]).find(x=>locKey(x.n)===k);return r?num(r.p):null}
+function barCell(v,max){return `<td class="comb"><span class="abar"><span class="trk"><i style="width:${max?Math.min(100,v/max*100):0}%"></i></span><b>${pct(v)}</b></span></td>`}
+function audTable(label,rows,perPlat,w){
+  const cols=PLATFORMS.filter(p=>w[p.id]!==undefined);const max=Math.max(...rows.map(r=>r.v),0);
+  return `<table class="aud"><thead><tr><th>${label}</th><th>Combined</th>${cols.map(p=>`<th>${p.ab}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${esc(r.n)}</td>${barCell(r.v,max)}${cols.map(p=>`<td>${pct(perPlat(p.id,r))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+function genderBar(vals){
+  const t=GENDERS.reduce((s,g)=>s+(vals[g.k]||0),0)||1;
+  return `<div class="gbar">${GENDERS.filter(g=>vals[g.k]>0).map(g=>`<span style="width:${vals[g.k]/t*100}%;background:${g.color};color:${textOn(g.color)}" title="${g.name} ${pct(vals[g.k])}">${vals[g.k]/t>.12?pct(vals[g.k]):""}</span>`).join("")}</div>
+    <div class="glegend">${GENDERS.filter(g=>vals[g.k]>0).map(g=>`<span><i style="background:${g.color}"></i>${g.name} <b>${pct(vals[g.k])}</b></span>`).join("")}</div>`;
+}
+function weightNote(){
+  const withData=PLATFORMS.filter(p=>{const a=audOf(p.id);return hasGender(a)||hasAges(a)||hasLocs(a,"countries")||hasLocs(a,"cities")});
+  const counted=withData.filter(p=>latestFollowers(p.id)>0),missing=withData.filter(p=>!(latestFollowers(p.id)>0));
+  const tot=counted.reduce((s,p)=>s+latestFollowers(p.id),0);
+  let s=counted.length?`Weighted by followers: ${counted.map(p=>`<b>${p.name}</b> ${fmt(latestFollowers(p.id))} (${pct(latestFollowers(p.id)/tot*100)})`).join(" · ")}.`:"";
+  if(missing.length)s+=` ${missing.map(p=>p.name).join(" and ")} ${missing.length>1?"aren't":"isn't"} counted yet: add ${missing.length>1?"their":"its"} follower number in Followers above.`;
+  return s;
+}
+function renderAudience(){
+  const el=$("#audience");if(!el)return;
+  const a=document.activeElement;if(el.contains(a)&&(a.tagName==="INPUT"))return;
+  if(audView!=="all"&&!platById(audView))audView="all";
+  const seg=`<div class="seg" id="audseg"><button data-av="all" aria-pressed="${audView==="all"}">Combined</button>${PLATFORMS.map(p=>`<button data-av="${p.id}" aria-pressed="${audView===p.id}">${p.name}</button>`).join("")}</div>`;
+  const updated=PLATFORMS.map(p=>audOf(p.id)&&audOf(p.id).d?`${p.ab} ${shortDate(audOf(p.id).d)}`:null).filter(Boolean);
+  const head=`<summary><span class="tri" aria-hidden="true">▼</span><h3>Audience</h3><span class="hint">${updated.length?"Updated "+updated.join(" · "):"Men and women, age and location for each platform"}</span></summary>`;
+  let body="";
+  if(audView==="all"){
+    const any=PLATFORMS.some(p=>{const x=audOf(p.id);return hasGender(x)||hasAges(x)||hasLocs(x,"countries")||hasLocs(x,"cities")});
+    if(!any)body=`<div class="empty" style="margin-top:10px">No audience numbers yet. Pick a platform above and copy in its percentages from the app's insights. The combined view fills in by itself.</div>`;
+    else{
+      const cards=[];
+      const gw=audWeights(hasGender);
+      if(Object.keys(gw).length){
+        const vals={};GENDERS.forEach(g=>vals[g.k]=wsum(gw,x=>num(x[g.k])));
+        cards.push(`<div class="aud-card"><h4>Men and women</h4>${genderBar(vals)}
+          <table class="aud" style="margin-top:10px"><thead><tr><th></th>${GENDERS.map(g=>`<th>${g.name}</th>`).join("")}</tr></thead><tbody>${
+          PLATFORMS.filter(p=>gw[p.id]!==undefined).map(p=>`<tr><td>${p.name}</td>${GENDERS.map(g=>`<td>${pct(num(audOf(p.id)[g.k]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      }
+      const aw=audWeights(hasAges);
+      if(Object.keys(aw).length){
+        const rows=AGES.map(k=>({n:k.replace("-","–"),k,v:wsum(aw,x=>num((x.ages||{})[k]))}));
+        cards.push(`<div class="aud-card"><h4>Age</h4>${audTable("Age",rows,(p,r)=>num((audOf(p).ages||{})[r.k]),aw)}</div>`);
+      }
+      [["countries","Top countries"],["cities","Top towns and cities"]].forEach(([key,label])=>{
+        const c=combinedLocs(key);if(!c.rows.length)return;
+        cards.push(`<div class="aud-card"><h4>${label}<span class="hint">top 10</span></h4>${audTable(key==="countries"?"Country":"Place",c.rows.slice(0,10),(p,r)=>locPct(p,key,r.k),c.w)}</div>`);
+      });
+      body=`<p class="aud-note">${weightNote()} A platform with more followers counts for more, so the combined numbers match your whole audience.</p>
+        ${cards.length?`<div class="aud-grid">${cards.join("")}</div>`:`<div class="empty">Add follower numbers in Followers above to see the combined view.</div>`}`;
+    }
+  }else{
+    const p=platById(audView),x=audOf(p.id)||{},ages=x.ages||{};
+    const locRows=(key,ph)=>{const L=(x[key]||[]).length?x[key]:[{n:"",p:""}];
+      return L.map(r=>`<div class="locrow" data-loc="${key}"><input type="text" value="${esc(r.n||"")}" placeholder="${ph}" aria-label="Name"><span class="pctin"><input type="number" min="0" max="100" step="0.1" inputmode="decimal" value="${num(r.p)===null?"":esc(r.p)}" aria-label="Percent"></span><button class="btn ghost icon" data-locdel aria-label="Remove row">${trash()}</button></div>`).join("")};
+    const f=latestFollowers(p.id);
+    body=`<p class="aud-note">Copy these from ${p.name}'s insights (Audience or Followers section). ${f?`Weighted as <b>${fmt(f)}</b> followers in the combined view.`:`Add a ${p.name} follower number in Followers above so this counts in the combined view.`}</p>
+      <div class="aud-form" id="audform">
+        <div class="aud-card"><h4>Men and women</h4>
+          <div class="pcts">${GENDERS.map(g=>`<div><label for="ag-${g.k}">${g.name}</label><span class="pctin"><input type="number" min="0" max="100" step="0.1" inputmode="decimal" id="ag-${g.k}" value="${num(x[g.k])===null?"":esc(x[g.k])}"></span></div>`).join("")}</div>
+          <div class="sumchk" id="gsum"></div></div>
+        <div class="aud-card"><h4>Age</h4>
+          <div class="pcts">${AGES.map(k=>`<div><label for="${ageId(k)}">${k.replace("-","–")}</label><span class="pctin"><input type="number" min="0" max="100" step="0.1" inputmode="decimal" id="${ageId(k)}" data-age="${k}" value="${num(ages[k])===null?"":esc(ages[k])}"></span></div>`).join("")}</div>
+          <div class="sumchk" id="asum"></div>
+          <p class="hint" style="margin:6px 0 0;font-size:12.5px">If the app splits 55–64 and 65+, add them together in 55+.</p></div>
+        <div class="aud-card"><h4>Top countries</h4><div id="loc-countries">${locRows("countries","e.g. Ireland")}</div><button type="button" class="addppl" data-addloc="countries">+ Add country</button></div>
+        <div class="aud-card"><h4>Top towns and cities</h4><div id="loc-cities">${locRows("cities","e.g. Dublin")}</div><button type="button" class="addppl" data-addloc="cities">+ Add town or city</button></div>
+      </div>
+      <div class="aud-acts"><label class="f" for="audd" style="margin:0">Date of these numbers</label><input type="date" id="audd" style="width:auto" value="${esc(x.d||todayStr())}">
+        <span style="flex:1"></span>${x.d?`<button class="btn danger" id="audclear">Clear ${p.name}</button>`:""}<button class="btn primary" id="audsave">Save ${p.name}</button></div>`;
+  }
+  const wasOpen=el.open;
+  el.innerHTML=head+`<div class="aud-body">${seg}${body}</div>`;
+  el.open=wasOpen;
+  el.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{audView=b.dataset.av;renderAudience()});
+  if(audView==="all")return;
+  const p=platById(audView);
+  const chk=()=>{
+    const g=GENDERS.reduce((s,x)=>s+(num($("#ag-"+x.k).value)||0),0),ag=AGES.reduce((s,k)=>s+(num($("#"+ageId(k)).value)||0),0);
+    const say=(el2,t)=>{el2.textContent=t?`Adds up to ${pct(t)}`+(Math.abs(t-100)>2?" (should be about 100%)":""):"";el2.classList.toggle("bad",!!t&&Math.abs(t-100)>2)};
+    say($("#gsum"),g);say($("#asum"),ag);
+  };
+  el.querySelectorAll("#audform input").forEach(i=>i.addEventListener("input",chk));chk();
+  const wireDel=root=>root.querySelectorAll("[data-locdel]").forEach(b=>b.onclick=()=>{const box=b.closest("[id^=loc-]");b.closest(".locrow").remove();if(!box.querySelector(".locrow"))el.querySelector(`[data-addloc="${box.id.slice(4)}"]`).click()});
+  wireDel(el);
+  el.querySelectorAll("[data-addloc]").forEach(b=>b.onclick=()=>{
+    const key=b.dataset.addloc,box=$("#loc-"+key),d=document.createElement("div");
+    d.className="locrow";d.dataset.loc=key;
+    d.innerHTML=`<input type="text" placeholder="${key==="countries"?"e.g. Ireland":"e.g. Dublin"}" aria-label="Name"><span class="pctin"><input type="number" min="0" max="100" step="0.1" inputmode="decimal" aria-label="Percent"></span><button class="btn ghost icon" data-locdel aria-label="Remove row">${trash()}</button>`;
+    box.appendChild(d);wireDel(d);d.querySelector("input").focus();
+  });
+  $("#audsave").onclick=()=>{
+    const rec={d:$("#audd").value||todayStr(),ts:Date.now(),ages:{}};
+    GENDERS.forEach(g=>{const v=num($("#ag-"+g.k).value);rec[g.k]=v});
+    AGES.forEach(k=>{const v=num($("#"+ageId(k)).value);if(v!==null)rec.ages[k]=v});
+    ["countries","cities"].forEach(key=>{rec[key]=[...el.querySelectorAll(`.locrow[data-loc="${key}"]`)].map(r=>{const [n,v]=r.querySelectorAll("input");return{n:n.value.trim(),p:num(v.value)}}).filter(r=>r.n&&r.p!==null)});
+    settings.audience=Object.assign({},settings.audience||{},{[p.id]:rec});persistSettings();
+    document.activeElement&&document.activeElement.blur();renderAudience();toast(p.name+" audience saved");
+  };
+  if($("#audclear"))$("#audclear").onclick=async()=>{
+    if(!await askConfirm(`${p.name}'s audience numbers will be cleared.`,"Clear"))return;
+    const next=Object.assign({},settings.audience||{});delete next[p.id];settings.audience=next;persistSettings();renderAudience();toast("Cleared");
+  };
+}
+
 /* ---------- Best performing ---------- */
 function renderBest(list){
   document.querySelectorAll("#bmetric button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===stat.bmetric));
@@ -1755,6 +1924,7 @@ function renderStats(){
   $("#tiles").innerHTML=[["posts","Posts"],["views","Views"],["saves","Saves"],["shares","Shares"],["follows","Follows"]]
     .map(([k,l])=>`<div class="tile ${k}"><b>${fmt(tot[k])}</b><span>${l}</span></div>`).join("");
   renderFollowers();
+  renderAudience();
   renderBest(list);
 
   // By platform (ignores the platform dropdown so all four can be compared)
