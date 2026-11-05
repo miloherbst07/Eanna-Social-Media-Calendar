@@ -236,6 +236,35 @@ a.inspmark:hover{text-decoration:underline}
 .col h3 small{margin-left:auto;background:var(--s);color:var(--st,#fff);font-weight:700;font-size:12px;padding:1px 8px;border-radius:99px}
 .col .card{padding:9px 10px}
 .col .card .t .tt{white-space:normal}
+#iscrim [hidden],#tscrim [hidden]{display:none!important}
+.ideatools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-4px 0 14px}
+.ideatools .hint{flex:1;min-width:220px}
+.seg .kc{display:inline-block;min-width:20px;padding:0 6px;margin-left:5px;border-radius:99px;background:color-mix(in srgb,currentColor 18%,transparent);font-size:12px;text-align:center}
+.col h3 .topicname{border:0;background:none;padding:2px 5px;margin:-2px -5px;border-radius:6px;font:inherit;font-weight:700;color:inherit;text-align:left;cursor:pointer;min-width:0;overflow-wrap:anywhere}
+.col h3 .topicname:hover,.col h3 .topicname:focus-visible{background:color-mix(in srgb,var(--s) 20%,transparent)}
+.col h3 .topicname::after{content:" \270E";opacity:.45;font-size:12px}
+.col.addtopic{border:2px dashed var(--line-strong);background:none;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--muted);cursor:pointer;min-height:110px}
+.col.addtopic:hover,.col.addtopic:focus-visible{color:var(--ink);border-color:var(--navy)}
+.card.idea .inote{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;color:var(--muted);margin-top:3px;white-space:pre-line}
+.card.idea .artist{font-weight:500;color:var(--muted)}
+.insplink{font-size:12px;font-weight:700;color:var(--p-instagram);text-decoration:none;border:1px solid currentColor;border-radius:99px;padding:0 8px;line-height:18px}
+.insplink:hover{text-decoration:underline}
+.xcount{font-size:11.5px;color:var(--muted);font-weight:600}
+.ifield{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;margin-bottom:10px;background:var(--surface-2)}
+.ifield-head{display:flex;gap:8px;align-items:center}
+.ifield-head input{font-weight:700}
+.ifield textarea{min-height:60px}
+.ifield .rmppl{flex:0 0 auto;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
+.ifield .rmppl:hover{color:#D0342C;border-color:currentColor}
+.fieldchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fieldchips button{border:1px dashed var(--line-strong);background:none;border-radius:99px;padding:4px 10px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.fieldchips button:hover{color:var(--ink);border-color:var(--navy)}
+.topicmodal{display:grid;gap:4px}
+.topicmodal label.f{margin:10px 0 4px}
+.topicmodal input[type=color]{width:64px;height:40px;border:1px solid var(--line-strong);border-radius:8px;padding:2px;background:var(--surface);cursor:pointer}
+.topicmodal .acts{margin-top:18px;flex-wrap:wrap}
+.topicmodal .acts .spacer{flex:1}
+.topicmove{display:flex;gap:8px;flex-wrap:wrap}
 .bank{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .bank summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:12px}
 .bank summary::-webkit-details-marker{display:none}
@@ -637,10 +666,12 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   <section class="view" id="view-ideas">
     <div class="page-head">
       <h2>Ideas</h2>
-      <span class="hint">Everything not yet on the calendar. Drag between stages, or open an idea and give it a date.</span>
+      <div class="seg" id="ideakind" role="group" aria-label="Idea section"></div>
       <span style="flex:1"></span>
+      <button class="btn" id="newtopic">+ New topic</button>
       <button class="btn primary" id="newidea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>New idea</button>
     </div>
+    <div class="ideatools"><span class="hint" id="ideahint"></span></div>
     <div class="board" id="board"></div>
     <details class="bank" id="bank">
       <summary>
@@ -907,6 +938,46 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   </div>
 </div>
 
+<!-- Idea editor -->
+<div class="scrim" id="iscrim" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ititle" id="ieditor">
+    <div class="modal-head"><h2 id="ititle">New idea</h2>
+      <button class="btn ghost icon" id="iclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="modal-body">
+      <div class="full"><label class="f" for="i-title" id="i-titlelabel">Title</label><input type="text" id="i-title" class="title-input"></div>
+      <div class="full"><label class="f">Section</label><div class="seg" id="i-kind" role="group" aria-label="Section"></div></div>
+      <div class="full" id="i-artistwrap"><label class="f" for="i-artist">Artist</label><input type="text" id="i-artist" placeholder="e.g. Doechii"></div>
+      <div><label class="f" for="i-topic">Topic</label><select id="i-topic"></select>
+        <div class="addrow" id="i-newtopicrow" hidden><input type="text" id="i-newtopic" placeholder="New topic name"><button class="btn" type="button" id="i-addtopic">Add</button></div></div>
+      <div id="i-statuswrap"><label class="f" for="i-status">Stage</label><select id="i-status"></select></div>
+      <div class="full"><label class="f" for="i-insp" id="i-insplabel">Video inspiration</label>
+        <div class="linkrow"><input type="url" id="i-insp"><a class="btn" id="i-insp-open" target="_blank" rel="noopener">Open</a></div></div>
+      <div class="full"><label class="f" for="i-notes">Notes</label><textarea id="i-notes" rows="4"></textarea></div>
+      <div class="sec">Your sections <span>Add anything else this needs. Name the section, then fill it in.</span></div>
+      <div class="full"><div id="i-fields"></div><button type="button" class="btn" id="i-addfield">+ Add section</button><div class="fieldchips" id="i-fieldchips"></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger" id="i-delete">Delete</button>
+      <button class="btn ghost" id="i-calendar">Put on the calendar</button>
+      <span class="spacer"></span>
+      <button class="btn" id="i-cancel">Cancel</button>
+      <button class="btn primary" id="i-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topic editor -->
+<div class="scrim" id="tscrim" aria-hidden="true" style="align-items:center">
+  <div class="modal confirm topicmodal" role="dialog" aria-modal="true" aria-labelledby="ttitle">
+    <h2 id="ttitle">New topic</h2>
+    <label class="f" for="t-name">Topic name</label><input type="text" id="t-name" placeholder="e.g. Player challenges">
+    <label class="f" for="t-color">Colour</label><input type="color" id="t-color">
+    <label class="f">Section</label><div class="seg" id="t-kind" role="group" aria-label="Section"></div>
+    <div id="t-movewrap"><label class="f">Order</label><div class="topicmove"><button class="btn" type="button" data-tmv="-1">&larr; Move left</button><button class="btn" type="button" data-tmv="1">Move right &rarr;</button></div></div>
+    <div class="acts"><button class="btn danger" id="t-delete">Delete topic</button><span class="spacer"></span><button class="btn" id="t-cancel">Cancel</button><button class="btn primary" id="t-save">Save</button></div>
+  </div>
+</div>
+
 <!-- Task / approval / video editor -->
 <div class="scrim" id="rscrim" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rtitle" id="reditor">
@@ -1140,7 +1211,9 @@ function normalizeSettings(s){
     statuses:Array.isArray(s.statuses)&&s.statuses.length?s.statuses:clone(DEFAULT_SETTINGS.statuses),
     people:Array.isArray(s.people)?s.people:[],
     followers:Array.isArray(s.followers)?s.followers:[],
-    audience:s.audience&&typeof s.audience==="object"&&!Array.isArray(s.audience)?s.audience:{}};
+    audience:s.audience&&typeof s.audience==="object"&&!Array.isArray(s.audience)?s.audience:{},
+    topics:Array.isArray(s.topics)?s.topics:null};
+  if(!out.topics){out.topics=seedTopics(out.categories);out._seedTopics=true}
   STAGE_LISTS.forEach(k=>{out[k]=Array.isArray(s[k])&&s[k].length?s[k]:clone(DEFAULT_SETTINGS[k])});
   return out;
 }
@@ -1193,7 +1266,7 @@ function startListening(){
   stopListening();
   unsubs.push(onSnapshot(accessRef,s=>{access=s.exists()?s.data():{emails:[]};renderAccess()},listenErr));
   unsubs.push(onSnapshot(settingsRef,s=>{
-    if(s.exists()){settings=normalizeSettings(s.data());renderAll()}
+    if(s.exists()){settings=normalizeSettings(s.data());if(settings._seedTopics){delete settings._seedTopics;if(!s.metadata.fromCache)persistSettings()}renderAll()}
     else if(!s.metadata.fromCache){settings=clone(DEFAULT_SETTINGS);persistSettings();renderAll()}
   },listenErr));
   unsubs.push(onSnapshot(collection(fdb,"items"),s=>{
@@ -1455,7 +1528,7 @@ function setRange(){let f=$("#rfrom").value,t=$("#rto").value;if(!f||!t)return;i
 $("#rfrom").onchange=setRange;$("#rto").onchange=setRange;
 document.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const s=startOfDay(new Date());range={from:ymd(s),to:ymd(addDays(s,+b.dataset.q-1))};renderCalendar()});
 $("#newpost").onclick=()=>openEditor(null,{date:calMode==="day"?ymd(cursor):todayStr()});
-$("#newidea").onclick=()=>openEditor(null,{date:""});
+$("#newidea").onclick=()=>openIdea(null,{ideaKind:ideaView});
 $("#newdraft").onclick=()=>openEditor(null,{date:"",draft:true});
 
 /* ---------- Drafts ---------- */
@@ -1497,21 +1570,209 @@ function renderDrafts(){
 }
 
 /* ---------- Ideas ---------- */
+const IDEA_KINDS=[
+  {id:"media",name:"Media content",hint:"Ideas for socials, sorted by topic. Drag an idea to another topic, or tap a topic name to rename it.",titleLabel:"Title",titlePh:"e.g. Shooting challenge with the U18s",linkLabel:"Video inspiration",linkPh:"Paste an Instagram, TikTok or YouTube link",notesPh:"What happens, who's in it, shots, music"},
+  {id:"youtube",name:"YouTube",hint:"Long videos for the YouTube channel, sorted by topic.",titleLabel:"Title",titlePh:"e.g. How Éanna won the 23/24 Super League",linkLabel:"Video inspiration",linkPh:"Paste a YouTube or Instagram link",notesPh:"Structure, interviews to get, footage you need"},
+  {id:"music",name:"Music",hint:"Good and popular songs for socials. Save the link to the sound so it's easy to find again.",titleLabel:"Song",titlePh:"e.g. Anxiety",linkLabel:"Link to the song or sound",linkPh:"Paste an Instagram audio, TikTok sound or Spotify link",notesPh:"Which part to use, what kind of video it suits"}];
+const KIND_IDS=IDEA_KINDS.map(k=>k.id);
+const kindById=id=>IDEA_KINDS.find(k=>k.id===id)||IDEA_KINDS[0];
+const SEED_TOPICS={youtube:[["Full game highlights","#E5322D"],["Video essays","#7B4FD6"],["Watch parties","#1E9E6A"]],
+  music:[["Trending right now","#E0317A"],["Game day hype","#FF5A00"],["Highlights and recaps","#2F37B5"],["Funny and skits","#E8A317"]]};
+function seedTopics(cats){
+  const out=(cats||[]).map(c=>({id:"tp-"+c.id,name:c.name,color:c.color,kind:"media"}));
+  Object.entries(SEED_TOPICS).forEach(([k,l])=>l.forEach(([n,c],i)=>out.push({id:"tp-"+k+"-"+i,name:n,color:c,kind:k})));
+  return out;
+}
+function topicsList(){if(!Array.isArray(settings.topics))settings.topics=seedTopics(settings.categories);return settings.topics}
+const topicById=id=>topicsList().find(t=>t.id===id);
+function ideaKind(it){return KIND_IDS.includes(it.ideaKind)?it.ideaKind:"media"}
+function ideaTopic(it){
+  const k=ideaKind(it);
+  if(typeof it.topic==="string"){const t=topicById(it.topic);return t&&t.kind===k?t.id:""}
+  const t=topicById("tp-"+it.category);return t&&t.kind===k?t.id:"";
+}
+const IV_KEY="eanna-idea-section";
+let ideaView="media";try{const v=localStorage.getItem(IV_KEY);if(KIND_IDS.includes(v))ideaView=v}catch(e){}
+function setIdeaView(v){ideaView=v;try{localStorage.setItem(IV_KEY,v)}catch(e){}renderBoard()}
+function linkLabel(u){try{const h=new URL(u).hostname.replace(/^www\./,"");
+  return /instagram/.test(h)?"Instagram":/tiktok/.test(h)?"TikTok":/youtu/.test(h)?"YouTube":/spotify/.test(h)?"Spotify":/apple/.test(h)?"Apple Music":"Link"}catch(e){return "Link"}}
+function ideaCardHTML(it){
+  const k=ideaKind(it),t=topicById(ideaTopic(it)),st=k==="music"?null:stById(it.status);
+  const extra=(it.fields||[]).filter(f=>f&&(f.label||(f.value||"").trim())).length;
+  const safe=/^https?:\/\//i.test(it.insp||"");
+  return `<div class="card idea" role="button" tabindex="0" ${TOUCH?"":'draggable="true"'} data-id="${it.id}" style="--c:${esc(t?t.color:"#9AA0C8")}">
+    <span class="t"><span class="tt">${k==="music"?"&#9835; ":""}${esc(it.title||"Untitled")}${k==="music"&&it.artist?` <span class="artist">· ${esc(it.artist)}</span>`:""}</span></span>
+    ${it.notes?`<span class="inote">${esc(it.notes)}</span>`:""}
+    <span class="m">${stagePill(st)}${safe?`<a class="insplink" href="${esc(it.insp)}" target="_blank" rel="noopener">${k==="music"?"&#9835;":"&#9654;"} ${esc(linkLabel(it.insp))}</a>`:""}${extra?`<span class="xcount">+${extra} section${extra>1?"s":""}</span>`:""}${whoHTML(it)}</span>
+  </div>`;
+}
 function renderBoard(){
-  const board=$("#board"),ideas=Object.values(items).filter(it=>!it.date&&!it.draft);
-  const known=new Set(settings.statuses.map(s=>s.id));
-  let html=settings.statuses.map(s=>{
-    const list=ideas.filter(it=>it.status===s.id).sort((a,b)=>(b.updated||0)-(a.updated||0));
-    return `<div class="col" data-drop="${s.id}" style="--s:${esc(s.color)};--st:${textOn(s.color)}"><h3>${esc(s.name)}<small>${list.length}</small></h3>
-      ${list.map(cardHTML).join("")}<button class="more" data-newstatus="${s.id}">+ Add idea</button></div>`;
-  }).join("");
-  const orphans=ideas.filter(it=>!known.has(it.status));
-  if(orphans.length)html+=`<div class="col" data-drop="" style="--s:#8A90B8"><h3>No stage<small>${orphans.length}</small></h3>${orphans.map(cardHTML).join("")}</div>`;
+  const board=$("#board"),all=Object.values(items).filter(it=>!it.date&&!it.draft);
+  const counts={};KIND_IDS.forEach(k=>counts[k]=0);all.forEach(it=>counts[ideaKind(it)]++);
+  $("#ideakind").innerHTML=IDEA_KINDS.map(k=>`<button type="button" data-k="${k.id}" aria-pressed="${k.id===ideaView}">${esc(k.name)}<span class="kc">${counts[k.id]}</span></button>`).join("");
+  $("#ideakind").querySelectorAll("button").forEach(b=>b.onclick=()=>setIdeaView(b.dataset.k));
+  $("#ideahint").textContent=kindById(ideaView).hint;
+  $("#newidea").lastChild.textContent=ideaView==="music"?"Add song":"New idea";
+  const ideas=all.filter(it=>ideaKind(it)===ideaView);
+  const topics=topicsList().filter(t=>t.kind===ideaView);
+  const sort=l=>l.sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const addLabel=ideaView==="music"?"+ Add song":"+ Add idea";
+  const col=(t,list)=>{const c=t?t.color:"#8A90B8";
+    return `<div class="col" data-drop="${t?esc(t.id):""}" style="--s:${esc(c)};--st:${textOn(c)}"><h3>${t?`<button type="button" class="topicname" data-topic="${esc(t.id)}" title="Rename, recolour or delete this topic">${esc(t.name)}</button>`:"No topic"}<small>${list.length}</small></h3>
+      ${list.map(ideaCardHTML).join("")}<button class="more" data-newtopic="${t?esc(t.id):""}">${addLabel}</button></div>`};
+  let html=topics.map(t=>col(t,sort(ideas.filter(it=>ideaTopic(it)===t.id)))).join("");
+  const orphans=ideas.filter(it=>!ideaTopic(it));
+  if(orphans.length||!topics.length)html+=col(null,sort(orphans));
+  html+=`<button type="button" class="col addtopic" id="addtopiccol">+ New topic</button>`;
   board.innerHTML=html;
   wireItems(board);
-  board.querySelectorAll("[data-newstatus]").forEach(b=>b.onclick=()=>openEditor(null,{date:"",status:b.dataset.newstatus}));
-  wireDrops(board,"status");
+  board.querySelectorAll("[data-newtopic]").forEach(b=>b.onclick=()=>openIdea(null,{topic:b.dataset.newtopic,ideaKind:ideaView}));
+  board.querySelectorAll("[data-topic]").forEach(b=>b.onclick=e=>{e.stopPropagation();openTopic(topicById(b.dataset.topic))});
+  $("#addtopiccol").onclick=()=>openTopic(null);
+  board.querySelectorAll("[data-drop]").forEach(z=>{
+    z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("over")});
+    z.addEventListener("dragleave",e=>{if(!z.contains(e.relatedTarget))z.classList.remove("over")});
+    z.addEventListener("drop",e=>{
+      e.preventDefault();z.classList.remove("over");
+      const it=items[e.dataTransfer.getData("text/plain")];if(!it)return;
+      const val=z.dataset.drop;if(ideaTopic(it)===val)return;
+      const next=Object.assign({},it,{topic:val,ideaKind:ideaView,updated:Date.now()});
+      const m=/^tp-(.+)$/.exec(val);if(m&&catById(m[1]))next.category=m[1];
+      persistItem(next);renderAll();toast("Moved to "+((topicById(val)||{}).name||"No topic"));
+    });
+  });
 }
+$("#newtopic").onclick=()=>openTopic(null);
+
+/* Idea editor */
+let ideaEditing=null;
+const FIELD_SUGGEST={media:["Players","Location","Music","Shot list","Who's filming","Caption idea"],youtube:["Interviews to get","Footage needed","Script","Thumbnail idea","Length"],music:["Best part (timestamp)","BPM / vibe","Used in","Similar songs"]};
+function setIdeaKindUI(k){document.querySelectorAll("#i-kind button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===k))}
+function curIdeaKind(){const b=document.querySelector('#i-kind button[aria-pressed="true"]');return b?b.dataset.k:"media"}
+function fillTopicSelect(val){
+  const k=curIdeaKind(),sel=$("#i-topic");
+  sel.innerHTML=`<option value="">No topic</option>`+topicsList().filter(t=>t.kind===k).map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("")+`<option value="__new">+ Make a new topic…</option>`;
+  sel.value=val||"";if(sel.value!==(val||""))sel.value="";
+  $("#i-newtopicrow").hidden=true;
+}
+function syncIdeaKind(){
+  const k=kindById(curIdeaKind());
+  $("#i-titlelabel").textContent=k.titleLabel;$("#i-title").placeholder=k.titlePh;
+  $("#i-insplabel").textContent=k.linkLabel;$("#i-insp").placeholder=k.linkPh;$("#i-notes").placeholder=k.notesPh;
+  $("#i-artistwrap").hidden=k.id!=="music";$("#i-statuswrap").hidden=k.id==="music";$("#i-calendar").hidden=k.id==="music";
+  $("#ititle").textContent=(ideaEditing&&ideaEditing._new?(k.id==="music"?"Add a song":"New idea"):(k.id==="music"?"Edit song":"Edit idea"));
+  renderFieldChips();
+}
+function syncIdeaLink(){const url=$("#i-insp").value.trim(),a=$("#i-insp-open");
+  if(/^https?:\/\//i.test(url)){a.href=url;a.style.opacity="";a.style.pointerEvents=""}else{a.removeAttribute("href");a.style.opacity=".45";a.style.pointerEvents="none"}}
+function addFieldRow(f,focus){
+  const r=document.createElement("div");r.className="ifield";r.dataset.fid=(f&&f.id)||uid("f");
+  r.innerHTML=`<div class="ifield-head"><input type="text" class="ifl" placeholder="Section name, e.g. Players" aria-label="Section name"><button type="button" class="rmppl" aria-label="Remove this section">×</button></div><textarea class="ifv" rows="2" aria-label="Section details"></textarea>`;
+  r.querySelector(".ifl").value=(f&&f.label)||"";r.querySelector(".ifv").value=(f&&f.value)||"";
+  r.querySelector(".rmppl").onclick=()=>{r.remove();renderFieldChips()};
+  r.querySelector(".ifl").addEventListener("input",renderFieldChips);
+  $("#i-fields").appendChild(r);
+  if(focus&&!TOUCH)(f&&f.label?r.querySelector(".ifv"):r.querySelector(".ifl")).focus();
+  return r;
+}
+function renderFieldChips(){
+  const have=new Set([...document.querySelectorAll("#i-fields .ifl")].map(i=>i.value.trim().toLowerCase()));
+  const k=curIdeaKind(),used=[];
+  Object.values(items).forEach(it=>{if(ideaKind(it)===k)(it.fields||[]).forEach(f=>{if(f&&f.label)used.push(f.label.trim())})});
+  const seen=new Set(),list=[];
+  [...used,...(FIELD_SUGGEST[k]||[])].forEach(l=>{const key=l.toLowerCase();if(l&&!seen.has(key)&&!have.has(key)){seen.add(key);list.push(l)}});
+  const box=$("#i-fieldchips");
+  box.innerHTML=list.length?`<span class="hint" style="width:100%">Quick add:</span>`+list.slice(0,10).map(l=>`<button type="button" data-fl="${esc(l)}">+ ${esc(l)}</button>`).join(""):"";
+  box.querySelectorAll("[data-fl]").forEach(b=>b.onclick=()=>{addFieldRow({label:b.dataset.fl},true);renderFieldChips()});
+}
+function openIdea(it,defaults){
+  const isNew=!it;
+  if(isNew){ideaEditing=blankItem(Object.assign({ideaKind:ideaView,topic:"",fields:[],artist:""},defaults||{}));
+    const m=/^tp-(.+)$/.exec(ideaEditing.topic||"");ideaEditing.category=m&&catById(m[1])?m[1]:""}
+  else{ideaEditing=Object.assign(blankItem(),clone(it));ideaEditing.ideaKind=ideaKind(it);ideaEditing.topic=ideaTopic(it)}
+  ideaEditing._new=isNew;
+  $("#i-kind").innerHTML=IDEA_KINDS.map(k=>`<button type="button" data-k="${k.id}">${esc(k.name)}</button>`).join("");
+  $("#i-kind").querySelectorAll("button").forEach(b=>b.onclick=()=>{if(b.dataset.k===curIdeaKind())return;setIdeaKindUI(b.dataset.k);fillTopicSelect("");syncIdeaKind()});
+  setIdeaKindUI(ideaEditing.ideaKind);
+  $("#i-title").value=ideaEditing.title||"";$("#i-artist").value=ideaEditing.artist||"";
+  fillTopicSelect(ideaEditing.topic);
+  fillSelect($("#i-status"),settings.statuses,ideaEditing.status,null);
+  if(!$("#i-status").value&&settings.statuses[0])$("#i-status").value=settings.statuses[0].id;
+  $("#i-insp").value=ideaEditing.insp||"";$("#i-notes").value=ideaEditing.notes||"";
+  $("#i-fields").innerHTML="";(ideaEditing.fields||[]).forEach(f=>addFieldRow(f));
+  $("#i-delete").style.display=isNew?"none":"";
+  syncIdeaKind();syncIdeaLink();
+  const t=topicById(ideaEditing.topic);$("#ieditor").style.setProperty("--c",t?t.color:"#9AA0C8");
+  $("#iscrim").classList.add("open");$("#iscrim").setAttribute("aria-hidden","false");
+  if(!TOUCH)setTimeout(()=>$("#i-title").focus(),30);
+}
+function closeIdea(){$("#iscrim").classList.remove("open");$("#iscrim").setAttribute("aria-hidden","true");ideaEditing=null}
+function readIdea(){
+  let insp=$("#i-insp").value.trim();if(insp&&!/^https?:\/\//i.test(insp))insp="https://"+insp;
+  let topic=$("#i-topic").value;if(topic==="__new")topic="";
+  const fields=[...document.querySelectorAll("#i-fields .ifield")].map(r=>({id:r.dataset.fid,label:r.querySelector(".ifl").value.trim(),value:r.querySelector(".ifv").value})).filter(f=>f.label||f.value.trim());
+  const kind=curIdeaKind();
+  const out=Object.assign({},ideaEditing,{title:$("#i-title").value.trim()||"Untitled",ideaKind:kind,topic,insp,notes:$("#i-notes").value,fields,
+    artist:kind==="music"?$("#i-artist").value.trim():(ideaEditing.artist||""),status:kind==="music"?ideaEditing.status:$("#i-status").value,updated:Date.now()});
+  const m=/^tp-(.+)$/.exec(topic);if(m&&catById(m[1]))out.category=m[1];
+  return out;
+}
+$("#i-topic").onchange=()=>{const nr=$("#i-newtopicrow");nr.hidden=$("#i-topic").value!=="__new";if(!nr.hidden&&!TOUCH)$("#i-newtopic").focus();
+  const t=topicById($("#i-topic").value);$("#ieditor").style.setProperty("--c",t?t.color:"#9AA0C8")};
+$("#i-addtopic").onclick=()=>{const name=$("#i-newtopic").value.trim();if(!name){toast("Type a name for the topic.");return}
+  const list=topicsList(),t={id:uid("tp"),name,color:PALETTE[list.length%PALETTE.length],kind:curIdeaKind()};
+  list.push(t);persistSettings();$("#i-newtopic").value="";fillTopicSelect(t.id);$("#ieditor").style.setProperty("--c",t.color);renderBoard();toast("Topic added")};
+$("#i-newtopic").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#i-addtopic").click()}});
+$("#i-insp").oninput=syncIdeaLink;
+$("#i-addfield").onclick=()=>{addFieldRow(null,true);renderFieldChips()};
+$("#i-save").onclick=()=>{if(!ideaEditing)return;const it=readIdea(),wasNew=it._new;delete it._new;persistItem(it);closeIdea();renderAll();
+  toast(wasNew?(it.ideaKind==="music"?"Song added":"Idea added"):"Changes saved")};
+$("#i-calendar").onclick=()=>{if(!ideaEditing)return;const it=readIdea();delete it._new;persistItem(it);closeIdea();renderAll();openEditor(items[it.id],null,true);toast("Pick a date to put it on the calendar")};
+$("#i-delete").onclick=async()=>{if(!ideaEditing)return;const id=ideaEditing.id;
+  if(!await askConfirm(`"${ideaEditing.title||"Untitled"}" will be deleted for good.`))return;
+  removeItem(id);closeIdea();renderAll();toast("Deleted")};
+$("#i-cancel").onclick=closeIdea;$("#iclose").onclick=closeIdea;
+$("#iscrim").addEventListener("mousedown",e=>{if(e.target===$("#iscrim"))closeIdea()});
+
+/* Topic editor */
+let topicEditing=null;
+function setTopicKindUI(k){document.querySelectorAll("#t-kind button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===k))}
+function openTopic(t){
+  const isNew=!t;const list=topicsList();
+  topicEditing=isNew?{id:uid("tp"),name:"",color:PALETTE[list.length%PALETTE.length],kind:ideaView,_new:true}:Object.assign({},t);
+  $("#ttitle").textContent=isNew?"New topic":"Edit topic";
+  $("#t-name").value=topicEditing.name;$("#t-color").value=/^#[0-9a-f]{6}$/i.test(topicEditing.color)?topicEditing.color:"#8A90B8";
+  $("#t-kind").innerHTML=IDEA_KINDS.map(k=>`<button type="button" data-k="${k.id}">${esc(k.name)}</button>`).join("");
+  $("#t-kind").querySelectorAll("button").forEach(b=>b.onclick=()=>setTopicKindUI(b.dataset.k));
+  setTopicKindUI(topicEditing.kind);
+  $("#t-delete").style.display=isNew?"none":"";$("#t-movewrap").hidden=isNew;
+  $("#tscrim").classList.add("open");$("#tscrim").setAttribute("aria-hidden","false");
+  if(!TOUCH)setTimeout(()=>$("#t-name").focus(),30);
+}
+function closeTopic(){$("#tscrim").classList.remove("open");$("#tscrim").setAttribute("aria-hidden","true");topicEditing=null}
+$("#t-save").onclick=()=>{if(!topicEditing)return;
+  const name=$("#t-name").value.trim();if(!name){toast("Type a name for the topic.");return}
+  const kind=(document.querySelector('#t-kind button[aria-pressed="true"]')||{dataset:{k:"media"}}).dataset.k;
+  const list=topicsList(),wasNew=topicEditing._new,old=topicById(topicEditing.id);
+  const t={id:topicEditing.id,name,color:$("#t-color").value,kind};
+  if(!wasNew&&old&&old.kind!==kind){Object.values(items).filter(it=>!it.date&&!it.draft&&ideaTopic(it)===t.id).forEach(it=>persistItem(Object.assign({},it,{topic:t.id,ideaKind:kind,updated:Date.now()})))}
+  if(wasNew)list.push(t);else{const i=list.findIndex(x=>x.id===t.id);if(i>=0)list[i]=t;else list.push(t)}
+  persistSettings();closeTopic();if(kind!==ideaView)ideaView=kind;renderAll();toast(wasNew?"Topic added":"Topic saved")};
+document.querySelectorAll("[data-tmv]").forEach(b=>b.onclick=()=>{if(!topicEditing||topicEditing._new)return;
+  const list=topicsList(),t=topicById(topicEditing.id);if(!t)return;
+  const same=list.filter(x=>x.kind===t.kind),pos=same.indexOf(t),to=same[pos+ +b.dataset.tmv];
+  if(!to){toast(+b.dataset.tmv<0?"It's already first.":"It's already last.");return}
+  const a=list.indexOf(t),c=list.indexOf(to);[list[a],list[c]]=[list[c],list[a]];persistSettings();renderBoard()});
+$("#t-delete").onclick=async()=>{if(!topicEditing)return;const t=topicById(topicEditing.id);if(!t){closeTopic();return}
+  const n=Object.values(items).filter(it=>!it.date&&!it.draft&&ideaTopic(it)===t.id).length;
+  if(!await askConfirm(`Delete the "${t.name}" topic?${n?` The ${n} idea${n>1?"s":""} in it will move to No topic. They won't be deleted.`:""}`,"Delete topic"))return;
+  settings.topics=topicsList().filter(x=>x.id!==t.id);persistSettings();closeTopic();renderAll();toast("Topic deleted")};
+$("#t-cancel").onclick=closeTopic;
+$("#tscrim").addEventListener("mousedown",e=>{if(e.target===$("#tscrim"))closeTopic()});
+$("#t-name").addEventListener("keydown",e=>{if(e.key==="Enter")$("#t-save").click()});
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||$("#cscrim").classList.contains("open"))return;
+  if(topicEditing)closeTopic();else if(ideaEditing)closeIdea()});
+
 function blankItem(extra){
   return Object.assign({id:uid("it"),title:"",category:(settings.categories[0]||{}).id||"",status:(settings.statuses[0]||{}).id||"",
     date:"",time:"",slot:"",link:"",insp:"",platforms:[],ready:false,workingOn:"",editedBy:"",doneBy:"",workingOnMore:[],editedByMore:[],doneByMore:[],players:"",caption:"",notes:"",
@@ -2126,7 +2387,8 @@ function renderPlatToggles(sel){
   $("#e-plats").innerHTML=PLATFORMS.map(p=>`<button type="button" class="tog" data-p="${p.id}" aria-pressed="${sel.includes(p.id)}">${p.name}</button>`).join("");
   $("#e-plats").querySelectorAll(".tog").forEach(b=>b.onclick=()=>{b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");renderEditorStats()});
 }
-function openEditor(it,defaults){
+function openEditor(it,defaults,full){
+  if(!full&&it&&!it.date&&!it.draft){openIdea(it);return}
   const isNew=!it;
   editing=isNew?blankItem(defaults):Object.assign(blankItem(),clone(it));editing._new=isNew;
   $("#mtitle").textContent=editing.draft?(isNew?"New draft":"Edit draft"):isNew?(editing.date?"New post":"New idea"):(editing.date?"Edit post":"Edit idea");
@@ -2151,7 +2413,7 @@ function openEditor(it,defaults){
   $("#e-delete").style.display=isNew?"none":"";$("#e-dup").style.display=isNew?"none":"";
   syncModalBits();
   $("#scrim").classList.add("open");$("#scrim").setAttribute("aria-hidden","false");
-  if(!TOUCH)setTimeout(()=>$("#e-title").focus(),30);
+  if(!TOUCH)setTimeout(()=>$(full?"#e-date":"#e-title").focus(),30);
 }
 function syncModalBits(){
   const c=catById($("#e-cat").value);$("#editor").style.setProperty("--c",c?c.color:"#9AA0C8");
