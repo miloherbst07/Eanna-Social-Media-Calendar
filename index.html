@@ -329,6 +329,22 @@ details.fpast>summary{cursor:pointer;font-weight:700;padding:6px 0;color:var(--m
 .composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--surface-2);align-items:flex-end}
 .composer textarea{flex:1;min-height:42px;max-height:140px;resize:none;font-size:16px}
 .chatempty{margin:auto;text-align:center;color:var(--muted);max-width:320px}
+.chatnav{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);overflow-x:auto;scrollbar-width:none}
+.chatnav::-webkit-scrollbar{display:none}
+.chatnav button{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);background:var(--surface);border-radius:99px;padding:6px 12px;font-weight:600;font-size:14px;color:var(--ink)}
+.chatnav button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chatnav .tabcount{margin-left:0}
+.chatnav .lock{font-size:12px;opacity:.7}
+.chatnote{font-size:12px;color:var(--muted);text-align:center;padding:6px 12px 0}
+.mention{font-weight:700;color:var(--burnt)}
+.mention.me{background:color-mix(in srgb,var(--orange) 22%,transparent);border-radius:4px;padding:0 3px}
+.msg.mine .mention{color:#FFD2B8}
+.msg.hasme{box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 60%,transparent)}
+.composer{position:relative}
+.mentionbox{position:absolute;left:10px;bottom:calc(100% + 4px);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);padding:4px;min-width:180px;z-index:5}
+.mentionbox[hidden]{display:none}
+.mentionbox button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:7px 10px;border-radius:7px;font-weight:600;font-size:14px;color:var(--ink)}
+.mentionbox button[aria-selected="true"],.mentionbox button:hover{background:var(--surface-2)}
 /* notifications panel */
 .npanel .step{display:flex;gap:10px;margin:0 0 10px;font-size:14px}
 .npanel .step b.n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:13px}
@@ -777,10 +793,11 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
 
   <!-- Chat -->
   <section class="view" id="view-chat">
-    <div class="page-head"><h2>Chat</h2><span class="hint">Messages for the whole media team. Everyone on the list sees them.</span></div>
+    <div class="page-head"><h2>Chat</h2><span class="hint" id="chathint">The team chat, plus a private chat with each person. Type @ to mention someone.</span></div>
     <div class="chat">
+      <div class="chatnav" id="chatnav" role="group" aria-label="Conversations"></div>
       <div class="msgs" id="msgs" aria-live="polite"></div>
-      <div class="composer"><textarea id="chatin" rows="1" placeholder="Write a message" aria-label="Message"></textarea><button class="btn primary" id="chatsend">Send</button></div>
+      <div class="composer"><div class="mentionbox" id="mentionbox" role="listbox" hidden></div><textarea id="chatin" rows="1" placeholder="Write a message" aria-label="Message"></textarea><button class="btn primary" id="chatsend">Send</button></div>
     </div>
   </section>
 
@@ -2021,50 +2038,119 @@ $("#newfday").onclick=()=>{
   notify("filming",`${myName()} added a filming day`,longDate(d));
 };
 
-/* ---------- Chat ---------- */
+/* ---------- Chat: the team chat, private one-to-one chats, and @mentions ---------- */
 const SEEN_KEY="eanna-chat-seen";
-let lastMsgId=null,chatWasOpen=false;
-function chatSeen(){try{return +localStorage.getItem(SEEN_KEY)||0}catch(e){return 0}}
+let lastMsgId=null,chatWasOpen=false,chatWith="";const CHAT_START=Date.now();
+try{chatWith=localStorage.getItem("eanna-chat-with")||""}catch(e){}
 function isMine(m){const em=me&&me.email?me.email.toLowerCase():"";return (!!m.email&&m.email===em)||(!!m.by&&m.by===myPid()&&!m.email)}
 function msgName(m){const p=personById(m.by);return p?p.name:(m.name||"Someone")}
-function linkify(s){return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function dmKey(a,b){return "dm:"+[a,b].sort().join("|")}
+/* Which conversation a message belongs to, from this person's point of view ("" = team chat, otherwise the other person's id) */
+function convOf(m){
+  if(!m.to)return "";
+  const mine=myPid(),pair=String(m.to).replace(/^dm:/,"").split("|");
+  if(!mine||!pair.includes(mine))return null;
+  return pair[0]===mine?pair[1]:pair[0];
+}
+function seenMap(){try{const v=JSON.parse(localStorage.getItem(SEEN_KEY)||"{}");return v&&typeof v==="object"?v:{"":+v||0}}catch(e){return {}}}
+function setSeen(conv,at){const s=seenMap();if((s[conv]||0)<at){s[conv]=at;try{localStorage.setItem(SEEN_KEY,JSON.stringify(s))}catch(e){}}}
+function mentionsIn(text){
+  const t=" "+text.toLowerCase();
+  return settings.people.filter(p=>{const n=p.name.trim().toLowerCase();if(!n)return false;
+    const i=t.indexOf("@"+n);if(i<0)return false;const after=t.charAt(i+1+n.length);return !after||!/[a-z0-9]/i.test(after)}).map(p=>p.id);
+}
+function renderText(m){
+  let html=esc(m.text||"").replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  const mine=myPid();
+  settings.people.slice().sort((a,b)=>b.name.length-a.name.length).forEach(p=>{
+    const n=esc(p.name.trim());if(!n)return;
+    const re=new RegExp("@"+n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![A-Za-z0-9])","gi");
+    html=html.replace(re,s=>`<span class="mention${p.id===mine?" me":""}">${s}</span>`);
+  });
+  return html;
+}
 function renderChat(){
   const box=$("#msgs");if(!box)return;
-  const list=Object.values(recs.msg||{}).sort((a,b)=>(a.at||0)-(b.at||0));
+  const mine=myPid(),others=settings.people.filter(p=>p.id!==mine);
+  if(chatWith&&!personById(chatWith))chatWith="";
+  if(!mine)chatWith="";
+  const all=Object.values(recs.msg||{}).sort((a,b)=>(a.at||0)-(b.at||0)).filter(m=>convOf(m)!==null);
   const open=$("#view-chat").classList.contains("active");
-  if(open&&!document.hidden&&list.length){try{localStorage.setItem(SEEN_KEY,String(list[list.length-1].at||0))}catch(e){}}
-  const seen=chatSeen(),unread=list.filter(m=>(m.at||0)>seen&&!isMine(m)).length;
-  const tab=document.querySelector('.tab[data-tab="chat"]');if(tab)tab.innerHTML="Chat"+(unread?` <span class="tabcount">${unread}</span>`:"");
-  const newest=list[list.length-1];
-  if(lastMsgId!==null&&newest&&newest.id!==lastMsgId&&!isMine(newest)&&!open)toast(`${msgName(newest)}: ${String(newest.text||"").slice(0,80)}`);
+  const list=all.filter(m=>convOf(m)===chatWith);
+  if(open&&!document.hidden&&list.length)setSeen(chatWith,list[list.length-1].at||0);
+  const seen=seenMap(),unreadIn=c=>all.filter(m=>convOf(m)===c&&(m.at||0)>(seen[c]||0)&&!isMine(m)).length;
+  const total=unreadIn("")+others.reduce((s,p)=>s+unreadIn(p.id),0);
+  const tab=document.querySelector('.tab[data-tab="chat"]');if(tab)tab.innerHTML="Chat"+(total?` <span class="tabcount">${total}</span>`:"");
+  // conversation picker
+  const nav=$("#chatnav"),btn=(id,label,extra)=>{const n=unreadIn(id);return `<button type="button" data-conv="${esc(id)}" aria-pressed="${chatWith===id}">${extra||""}${esc(label)}${n?` <span class="tabcount">${n}</span>`:""}</button>`};
+  nav.innerHTML=btn("","Team chat")+(mine?others.map(p=>btn(p.id,p.name,'<span class="lock" aria-hidden="true">&#128274;</span>')).join(""):"");
+  nav.querySelectorAll("[data-conv]").forEach(b=>b.onclick=()=>{chatWith=b.dataset.conv;try{localStorage.setItem("eanna-chat-with",chatWith)}catch(e){}chatWasOpen=false;hideMentions();renderChat();if(!TOUCH)$("#chatin").focus()});
+  const withP=personById(chatWith);
+  $("#chatin").placeholder=withP?`Private message to ${withP.name}`:"Message the team. Type @ to mention someone";
+  // pop-up for new messages while elsewhere
+  const newest=all[all.length-1];
+  if(lastMsgId!==null&&newest&&newest.id!==lastMsgId&&(newest.at||0)>CHAT_START&&!isMine(newest)&&!(open&&convOf(newest)===chatWith))
+    toast(`${msgName(newest)}${convOf(newest)?" (private)":""}: ${String(newest.text||"").slice(0,80)}`);
   lastMsgId=newest?newest.id:"";
   const near=box.scrollHeight-box.scrollTop-box.clientHeight<80;
-  let html="",lastDay="";
+  let html=withP?`<div class="chatnote">&#128274; Only you and ${esc(withP.name)} see this chat.</div>`:"",lastDay="";
   list.forEach(m=>{
     const d=new Date(m.at||0),day=ymd(d);
     if(day!==lastDay){html+=`<div class="daysep">${day===todayStr()?"Today":esc(longDate(day))}</div>`;lastDay=day}
-    const mine=isMine(m),tm=d.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"});
-    html+=`<div class="msg${mine?" mine":""}">${mine?"":`<span class="mwho">${esc(msgName(m))}</span>`}<span class="mtext">${linkify(m.text||"")}</span><span class="mtime">${tm}</span>${mine?`<button class="mdel" data-mdel="${m.id}" aria-label="Delete this message">&#10005;</button>`:""}</div>`;
+    const own=isMine(m),tm=d.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"}),hasMe=!own&&mine&&(m.mentions||[]).includes(mine);
+    html+=`<div class="msg${own?" mine":""}${hasMe?" hasme":""}">${own?"":`<span class="mwho">${esc(msgName(m))}</span>`}<span class="mtext">${renderText(m)}</span><span class="mtime">${tm}</span>${own?`<button class="mdel" data-mdel="${m.id}" aria-label="Delete this message">&#10005;</button>`:""}</div>`;
   });
-  box.innerHTML=html||`<div class="chatempty">No messages yet. Say hello to the team.</div>`;
+  box.innerHTML=html+(list.length?"":`<div class="chatempty">${withP?`No messages with ${esc(withP.name)} yet.`:"No messages yet. Say hello to the team."}</div>`);
   box.querySelectorAll("[data-mdel]").forEach(b=>b.onclick=async()=>{const m=recs.msg[b.dataset.mdel];if(!m)return;
-    if(!await askConfirm("This message will be deleted for everyone.","Delete"))return;removeRec(m);renderChat()});
+    if(!await askConfirm(m.to?"This message will be deleted for both of you.":"This message will be deleted for everyone.","Delete"))return;removeRec(m);renderChat()});
   if(near||(open&&!chatWasOpen))box.scrollTop=box.scrollHeight;
   chatWasOpen=open;
 }
 function sendChat(){
   const inp=$("#chatin"),text=inp.value.trim();if(!text)return;
-  const m={id:uid("msg"),kind:"msg",text:text.slice(0,2000),by:myPid(),name:myName(),email:me&&me.email?me.email.toLowerCase():"",at:Date.now()};
-  persistRec(m);inp.value="";inp.style.height="";renderChat();$("#msgs").scrollTop=$("#msgs").scrollHeight;
-  notify("msg",`${myName()} in the team chat`,text);
+  const mine=myPid();
+  if(chatWith&&!mine){toast("Pick your name in Settings first.");return}
+  const m={id:uid("msg"),kind:"msg",text:text.slice(0,2000),by:mine,name:myName(),email:me&&me.email?me.email.toLowerCase():"",at:Date.now()};
+  if(chatWith)m.to=dmKey(mine,chatWith);else m.mentions=mentionsIn(text).filter(id=>id!==mine);
+  persistRec(m);inp.value="";inp.style.height="";hideMentions();renderChat();$("#msgs").scrollTop=$("#msgs").scrollHeight;
+  if(chatWith){notifyPeople("dm",`${myName()} sent you a private message`,text,[chatWith]);return}
+  const men=m.mentions||[];
+  if(men.length)notifyPeople("mention",`${myName()} mentioned you in the team chat`,text,men);
+  notifyPeople("msg",`${myName()} in the team chat`,text,settings.people.map(p=>p.id).filter(id=>!men.includes(id)));
+}
+/* @mention picker */
+let menSel=0,menList=[];
+function hideMentions(){$("#mentionbox").hidden=true;menList=[]}
+function mentionQuery(){const t=$("#chatin"),before=t.value.slice(0,t.selectionStart),m=/(?:^|\s)@([^\s@]*)$/.exec(before);return m?m[1]:null}
+function showMentions(){
+  if(chatWith){hideMentions();return}
+  const q=mentionQuery();if(q===null){hideMentions();return}
+  const mine=myPid();menList=settings.people.filter(p=>p.id!==mine&&p.name.toLowerCase().startsWith(q.toLowerCase()));
+  if(!menList.length){hideMentions();return}
+  menSel=Math.min(menSel,menList.length-1);
+  const box=$("#mentionbox");box.hidden=false;
+  box.innerHTML=menList.map((p,i)=>`<button type="button" role="option" data-men="${esc(p.id)}" aria-selected="${i===menSel}"><span class="who"><b>${esc(initials(p.name))}</b></span>${esc(p.name)}</button>`).join("");
+  box.querySelectorAll("[data-men]").forEach(b=>b.onmousedown=e=>{e.preventDefault();pickMention(personById(b.dataset.men))});
+}
+function pickMention(p){
+  if(!p)return;const t=$("#chatin"),pos=t.selectionStart,before=t.value.slice(0,pos).replace(/@([^\s@]*)$/,"@"+p.name+" "),after=t.value.slice(pos);
+  t.value=before+after;t.focus();t.selectionStart=t.selectionEnd=before.length;hideMentions();
 }
 $("#chatsend").onclick=sendChat;
-$("#chatin").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!TOUCH){e.preventDefault();sendChat()}});
-$("#chatin").addEventListener("input",()=>{const t=$("#chatin");t.style.height="";t.style.height=Math.min(t.scrollHeight,140)+"px"});
+$("#chatin").addEventListener("keydown",e=>{
+  if(menList.length&&!$("#mentionbox").hidden){
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();menSel=(menSel+(e.key==="ArrowDown"?1:-1)+menList.length)%menList.length;showMentions();return}
+    if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();pickMention(menList[menSel]);return}
+    if(e.key==="Escape"){e.preventDefault();hideMentions();return}
+  }
+  if(e.key==="Enter"&&!e.shiftKey&&!TOUCH){e.preventDefault();sendChat()}
+});
+$("#chatin").addEventListener("input",()=>{const t=$("#chatin");t.style.height="";t.style.height=Math.min(t.scrollHeight,140)+"px";menSel=0;showMentions()});
+$("#chatin").addEventListener("blur",()=>setTimeout(hideMentions,150));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderChat()});
 
 /* ---------- Notifications (sent to each person's phone through the free ntfy app) ---------- */
-const NOTIFY_EVENTS=[["calendar","A post is added to the calendar","calendar"],["idea","Someone adds a new idea","bulb"],["msg","A new chat message","speech_balloon"],["filming","An idea is added to a filming day","movie_camera"],["task","Someone gives you a task","white_check_mark"],["approval","Something is sent for approval","eyes"],["shoot","A shot video is logged","video_camera"]];
+const NOTIFY_EVENTS=[["dm","Someone sends you a private message","envelope"],["mention","Someone @mentions you in the team chat","bell"],["calendar","A post is added to the calendar","calendar"],["idea","Someone adds a new idea","bulb"],["msg","A new chat message","speech_balloon"],["filming","An idea is added to a filming day","movie_camera"],["task","Someone gives you a task","white_check_mark"],["approval","Something is sent for approval","eyes"],["shoot","A shot video is logged","video_camera"]];
 function pushTo(topic,title,message,tag){
   return fetch("https://ntfy.sh/",{method:"POST",body:JSON.stringify({topic,title,message:String(message||"").slice(0,300),click:location.href.split("#")[0],tags:tag?[tag]:[]})});
 }
@@ -2077,6 +2163,19 @@ function notify(ev,title,message,onlyPid){
       if((cfg.webTokens||[]).length)web=true;
     });
     if(web&&settings.pushKey)sendInstant({ev,title,message:String(message||"").slice(0,300),actor:mine,only:onlyPid||"",self:false}).then(ok=>{if(!ok)queueEvent(ev,title,message,onlyPid,false)});
+  }catch(e){}
+}
+/* Send to particular people, using their own on/off choices (new kinds default to on) */
+function wants(pid,ev){const on=((settings.notify||{})[pid]||{}).on||{};return on[ev]!==undefined?!!on[ev]:(ev==="dm"||ev==="mention")}
+function notifyPeople(ev,title,message,pids){
+  try{
+    const mine=myPid(),tag=(NOTIFY_EVENTS.find(e=>e[0]===ev)||[])[2];
+    [...new Set(pids)].forEach(pid=>{
+      const cfg=(settings.notify||{})[pid];if(!cfg||pid===mine||!wants(pid,ev))return;
+      if(cfg.topic)pushTo(cfg.topic,title,message,tag).catch(()=>{});
+      if((cfg.webTokens||[]).length&&settings.pushKey){const body={ev,title,message:String(message||"").slice(0,300),actor:mine,only:pid,self:true};
+        sendInstant(body).then(ok=>{if(!ok)queueEvent(ev,title,message,pid,true)})}
+    });
   }catch(e){}
 }
 /* Instant sender (Cloudflare Worker). If it can't be reached, the GitHub job sends it a few minutes later instead. */
@@ -2171,7 +2270,7 @@ function renderNotifyPanel(){
     else html+=`<p class="sub" style="margin:0 0 10px">Get a notification on this device when something happens, even when the calendar is closed. No app needed.</p><button class="btn primary" id="won">Allow notifications</button>`;
     if(devs.length)html+=`<p class="sub" style="margin:10px 0 0">On for ${devs.length} device${devs.length>1?"s":""}: ${devs.map(d=>esc(d.dev||"Device")).join(", ")}.</p>`;
     html+=`<h4 style="margin:18px 0 0">Tell me when</h4>
-      <div class="toggles2">${NOTIFY_EVENTS.map(([k,l])=>`<label><input type="checkbox" data-nev="${k}" ${on[k]?"checked":""}>${esc(l)}</label>`).join("")}</div>
+      <div class="toggles2">${NOTIFY_EVENTS.map(([k,l])=>`<label><input type="checkbox" data-nev="${k}" ${(on[k]!==undefined?on[k]:(k==="dm"||k==="mention"))?"checked":""}>${esc(l)}</label>`).join("")}</div>
       <p class="sub" style="margin:0">You never get notified about things you do yourself.</p>
       <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Want them instantly? Use the free ntfy app as well</summary><div style="margin-top:10px">${cfg&&cfg.topic?`
         <div class="step"><b class="n">1</b><span>Get <strong>ntfy</strong>: <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a></span></div>
