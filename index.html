@@ -1321,7 +1321,8 @@ function normalizeSettings(s){
     whoami:s.whoami&&typeof s.whoami==="object"&&!Array.isArray(s.whoami)?s.whoami:{},
     notify:s.notify&&typeof s.notify==="object"&&!Array.isArray(s.notify)?s.notify:{},
     filmDays:s.filmDays&&typeof s.filmDays==="object"&&!Array.isArray(s.filmDays)?s.filmDays:{},
-    pushKey:typeof s.pushKey==="string"?s.pushKey:""};
+    pushKey:typeof s.pushKey==="string"?s.pushKey:"",
+    pushWorker:typeof s.pushWorker==="string"?s.pushWorker:""};
   if(!out.topics){out.topics=seedTopics(out.categories);out._seedTopics=true}
   STAGE_LISTS.forEach(k=>{out[k]=Array.isArray(s[k])&&s[k].length?s[k]:clone(DEFAULT_SETTINGS[k])});
   return out;
@@ -2075,8 +2076,18 @@ function notify(ev,title,message,onlyPid){
       if(cfg.topic)pushTo(cfg.topic,title,message,tag).catch(()=>{});
       if((cfg.webTokens||[]).length)web=true;
     });
-    if(web&&settings.pushKey)queueEvent(ev,title,message,onlyPid,false);
+    if(web&&settings.pushKey)sendInstant({ev,title,message:String(message||"").slice(0,300),actor:mine,only:onlyPid||"",self:false}).then(ok=>{if(!ok)queueEvent(ev,title,message,onlyPid,false)});
   }catch(e){}
+}
+/* Instant sender (Cloudflare Worker). If it can't be reached, the GitHub job sends it a few minutes later instead. */
+async function sendInstant(p){
+  if(!settings.pushWorker||!me)return false;
+  try{
+    const t=await me.getIdToken();
+    const r=await fetch(settings.pushWorker,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+t},body:JSON.stringify(p)});
+    const j=await r.json().catch(()=>({}));
+    return !!(r.ok&&j.ok);
+  }catch(e){return false}
 }
 /* Phones that get notifications straight from the calendar: the GitHub job sends these every few minutes */
 function queueEvent(ev,title,message,onlyPid,self){
@@ -2151,7 +2162,7 @@ function renderNotifyPanel(){
   if(p){
     html+=`<h4 style="margin:18px 0 6px">Notifications on this ${esc(deviceLabel())}</h4>`;
     if(!settings.pushKey)html+=`<p class="sub" style="margin:0">Not set up yet. Milo needs to do the one-off setup in the box at the bottom of this panel.</p>`;
-    else if(here)html+=`<p style="margin:0 0 10px;font-weight:600;color:var(--ready)">&#10003; On. Notifications arrive within about 5 to 15 minutes.</p>
+    else if(here)html+=`<p style="margin:0 0 10px;font-weight:600;color:var(--ready)">&#10003; On. ${settings.pushWorker?"Notifications arrive in a few seconds.":"Notifications arrive within about 5 to 15 minutes."}</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="wtest">Send me a test</button><button class="btn danger" id="woff">Turn off on this device</button></div>`;
     else if(isIOS()&&!isStandalone())html+=`<p class="sub" style="margin:0 0 8px">On iPhone and iPad, Apple only lets websites send notifications once they're on your Home Screen (iOS 16.4 or newer):</p>
       <div class="step"><b class="n">1</b><span>Tap the <strong>Share</strong> button (the square with an arrow) at the bottom of Safari.</span></div>
@@ -2171,17 +2182,26 @@ function renderNotifyPanel(){
   }
   html+=`<details style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"${settings.pushKey?"":" open"}><summary style="cursor:pointer;font-weight:600">One-off setup (Milo)</summary>
     <p class="sub" style="margin:8px 0">In Firebase, open <strong>Project settings › Cloud Messaging</strong>. Under <strong>Web Push certificates</strong>, tap <strong>Generate key pair</strong> and paste the key here. It's a public key, so it's safe to share with the team.</p>
-    <div class="addrow"><input type="text" id="pushkey" value="${esc(settings.pushKey)}" placeholder="Web Push key, starts with B…" autocomplete="off" spellcheck="false"><button class="btn primary" id="savekey">Save</button></div></details>`;
+    <div class="addrow"><input type="text" id="pushkey" value="${esc(settings.pushKey)}" placeholder="Web Push key, starts with B…" autocomplete="off" spellcheck="false"><button class="btn primary" id="savekey">Save</button></div>
+    <p class="sub" style="margin:14px 0 8px"><strong>Instant sender</strong> (optional). Paste your Cloudflare Worker's address so notifications arrive in seconds. Without it, GitHub sends them every few minutes.</p>
+    <div class="addrow"><input type="text" id="pushworker" value="${esc(settings.pushWorker)}" placeholder="https://eanna-notify.….workers.dev" autocomplete="off" spellcheck="false" inputmode="url"><button class="btn primary" id="saveworker">Save</button></div></details>`;
   el.innerHTML=html;
   $("#whoami").value=pid||"";
   $("#whoami").onchange=()=>{const v=$("#whoami").value,map=Object.assign({},settings.whoami||{});
     if(v)map[em.toLowerCase()]=v;else delete map[em.toLowerCase()];settings.whoami=map;persistSettings();renderAll();toast(v?"Thanks, "+personById(v).name:"Cleared")};
   $("#savekey").onclick=()=>{const k=$("#pushkey").value.trim();if(k&&!/^B[A-Za-z0-9_-]{60,}$/.test(k)){toast("That doesn't look like a Web Push key. It's a long code starting with B.");return}
     settings.pushKey=k;persistSettings();document.activeElement.blur();renderNotifyPanel();toast(k?"Saved. Everyone can now allow notifications.":"Key removed")};
+  $("#saveworker").onclick=async()=>{let u=$("#pushworker").value.trim().replace(/\/+$/,"");
+    if(u&&!/^https:\/\/[a-z0-9.-]+\.workers\.dev$/i.test(u)&&!/^https:\/\//i.test(u)){toast("Paste the full address, starting with https://");return}
+    if(u){try{const r=await fetch(u);const j=await r.json();if(!j.ok)throw 0}catch(e){toast("Couldn't reach that address. Check it's deployed, then try again.");return}}
+    settings.pushWorker=u;persistSettings();document.activeElement.blur();renderNotifyPanel();toast(u?"Instant notifications are on.":"Instant sender removed")};
   if(!p)return;
   if($("#won"))$("#won").onclick=enablePush;
   if($("#woff"))$("#woff").onclick=disablePush;
-  if($("#wtest"))$("#wtest").onclick=()=>{queueEvent("test","Éanna Media Calendar","Notifications are working on your "+deviceLabel()+".",pid,true);toast("Test on its way. It should arrive within about 15 minutes.")};
+  if($("#wtest"))$("#wtest").onclick=async()=>{
+    const msg="Notifications are working on your "+deviceLabel()+".";
+    if(await sendInstant({ev:"test",title:"Éanna Media Calendar",message:msg,actor:pid,only:pid,self:true})){toast("Test sent. It should arrive in a few seconds.");return}
+    queueEvent("test","Éanna Media Calendar",msg,pid,true);toast("Test on its way. It should arrive within about 15 minutes.")};
   el.querySelectorAll("[data-nev]").forEach(c=>c.onchange=()=>{setPersonCfg(pid,cfg=>{cfg.on=Object.assign({},cfg.on,{[c.dataset.nev]:c.checked})});toast("Saved")});
   if($("#nsetup"))$("#nsetup").onclick=()=>{setPersonCfg(pid,cfg=>{cfg.topic=newTopic()});renderNotifyPanel();el.querySelector("details").open=true;toast("Now follow steps 1 to 3")};
   if(cfg&&cfg.topic){
