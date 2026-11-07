@@ -270,6 +270,10 @@ a.inspmark:hover{text-decoration:underline}
 /* idea dropdowns, favourites, submitted by */
 .whochips{display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 14px}
 .whochips .chip b{font-weight:700;color:var(--muted);margin-left:2px}
+.whochips .wlab{font-size:12.5px;font-weight:700;color:var(--muted);align-self:center;margin:0 2px 0 6px}
+.whochips .wlab:first-child{margin-left:0}
+.card.idea .favby{font-size:11.5px;font-weight:700;color:#B7791F}
+.idetail .favnames{font-size:12.5px;color:var(--muted);margin:0 0 6px}
 .card.idea .t{align-items:center}
 .card.idea .chev{margin-left:auto;flex:none;color:var(--muted);font-size:12px;transition:transform .15s}
 .card.idea.open .chev{transform:rotate(180deg)}
@@ -1719,6 +1723,7 @@ function myName(){const p=personById(myPid());return p?p.name:(me&&me.displayNam
 function miloId(){const p=settings.people.find(x=>x.name.trim().toLowerCase()==="milo")||settings.people[0];return p?p.id:""}
 function ideaBy(it){return it.by&&personById(it.by)?it.by:miloId()}
 function isFav(it){const m=myPid();return !!m&&(it.favBy||[]).includes(m)}
+function favPeople(it){return (it.favBy||[]).map(personById).filter(Boolean)}
 let ideaOpen=new Set(),ideaWho="all";
 function toggleIdeaOpen(id){
   ideaOpen.has(id)?ideaOpen.delete(id):ideaOpen.add(id);
@@ -1742,8 +1747,9 @@ function ideaCardHTML(it){
   return `<div class="card idea${open?" open":""}" role="button" tabindex="0" aria-expanded="${open}" ${TOUCH?"":'draggable="true"'} data-id="${it.id}" style="--c:${esc(t?t.color:"#9AA0C8")}">
     <span class="t"><span class="tt">${fav?'<span class="favmark" title="In your favourites">&#9733;</span> ':""}${k==="music"?"&#9835; ":""}${esc(it.title||"Untitled")}${k==="music"&&it.artist?` <span class="artist">· ${esc(it.artist)}</span>`:""}</span><span class="chev" aria-hidden="true">&#9660;</span></span>
     ${it.notes?`<span class="inote">${esc(it.notes)}</span>`:""}
-    <span class="m">${stagePill(st)}${it.filmDate&&k!=="music"?`<span class="filmmark">&#127916; ${esc(shortDate(it.filmDate))}</span>`:""}${safe?`<a class="insplink" href="${esc(it.insp)}" target="_blank" rel="noopener">${k==="music"?"&#9835;":"&#9654;"} ${esc(linkLabel(it.insp))}</a>`:""}${fields.length?`<span class="xcount">+${fields.length} section${fields.length>1?"s":""}</span>`:""}${by?`<span class="bymark">by ${esc(by.name)}</span>`:""}${whoHTML(it)}</span>
+    <span class="m">${stagePill(st)}${it.filmDate&&k!=="music"?`<span class="filmmark">&#127916; ${esc(shortDate(it.filmDate))}</span>`:""}${safe?`<a class="insplink" href="${esc(it.insp)}" target="_blank" rel="noopener">${k==="music"?"&#9835;":"&#9654;"} ${esc(linkLabel(it.insp))}</a>`:""}${fields.length?`<span class="xcount">+${fields.length} section${fields.length>1?"s":""}</span>`:""}${by?`<span class="bymark">by ${esc(by.name)}</span>`:""}${favPeople(it).length?`<span class="favby" title="Favourited by ${esc(favPeople(it).map(x=>x.name).join(", "))}">&#9733; ${favPeople(it).length}</span>`:""}${whoHTML(it)}</span>
     <div class="idetail" data-own>
+      ${favPeople(it).length?`<p class="favnames">&#9733; Favourited by ${esc(favPeople(it).map(x=>x.name).join(", "))}</p>`:""}
       ${it.notes?`<p class="full-notes">${esc(it.notes)}</p>`:""}
       ${fields.length?`<dl>${fields.map(f=>`<dt>${esc(f.label||"Notes")}</dt><dd>${esc(f.value||"")}</dd>`).join("")}</dl>`:""}
       ${!it.notes&&!fields.length?'<p class="hint" style="margin:0 0 8px">No notes yet. Tap Edit to add some.</p>':""}
@@ -1768,12 +1774,19 @@ function renderBoard(){
   $("#ideahint").textContent=kindById(ideaView).hint;
   $("#newidea").lastChild.textContent=ideaView==="music"?"Add song":"New idea";
   const inKind=all.filter(it=>ideaKind(it)===ideaView);
-  if(ideaWho!=="all"&&ideaWho!=="fav"&&!personById(ideaWho))ideaWho="all";
-  const favN=inKind.filter(isFav).length;
-  $("#ideawho").innerHTML=[{id:"all",name:"Everyone",n:inKind.length},{id:"fav",name:"★ My favourites",n:favN}].concat(settings.people.map(p=>({id:p.id,name:p.name,n:inKind.filter(it=>ideaBy(it)===p.id).length})))
-    .map(o=>`<button type="button" class="chip" data-who="${esc(o.id)}" aria-pressed="${ideaWho===o.id}" style="--cc:${o.id==="fav"?"#E8A317":"#2F37B5"}">${esc(o.name)} <b>${o.n}</b></button>`).join("");
+  if(ideaWho==="fav")ideaWho="fav:"+(myPid()||"any");
+  const fp=/^fav:(.+)$/.exec(ideaWho);
+  if(ideaWho!=="all"&&!(fp&&(fp[1]==="any"||personById(fp[1])))&&!personById(ideaWho))ideaWho="all";
+  const favOf=(it,pid)=>pid==="any"?(it.favBy||[]).some(x=>personById(x)):(it.favBy||[]).includes(pid);
+  const mine=myPid();
+  const chip=(id,name,n,col)=>`<button type="button" class="chip" data-who="${esc(id)}" aria-pressed="${ideaWho===id}" style="--cc:${col}">${esc(name)} <b>${n}</b></button>`;
+  $("#ideawho").innerHTML=`<span class="wlab">Submitted by</span>`+chip("all","Everyone",inKind.length,"#2F37B5")
+    +settings.people.map(p=>chip(p.id,p.name,inKind.filter(it=>ideaBy(it)===p.id).length,"#2F37B5")).join("")
+    +`<span class="wlab">&#9733; Favourites</span>`
+    +settings.people.map(p=>chip("fav:"+p.id,p.id===mine?"Mine":p.name,inKind.filter(it=>favOf(it,p.id)).length,"#E8A317")).join("")
+    +chip("fav:any","Anyone's",inKind.filter(it=>favOf(it,"any")).length,"#E8A317");
   $("#ideawho").querySelectorAll("[data-who]").forEach(b=>b.onclick=()=>{ideaWho=b.dataset.who;renderBoard()});
-  const ideas=inKind.filter(it=>ideaWho==="all"?true:ideaWho==="fav"?isFav(it):ideaBy(it)===ideaWho);
+  const ideas=inKind.filter(it=>{if(ideaWho==="all")return true;const f=/^fav:(.+)$/.exec(ideaWho);return f?favOf(it,f[1]):ideaBy(it)===ideaWho});
   const allOpen=ideas.length&&ideas.every(it=>ideaOpen.has(it.id));
   $("#ideaexpand").textContent=allOpen?"Close all":"Open all";
   $("#ideaexpand").onclick=()=>{if(allOpen)ideas.forEach(it=>ideaOpen.delete(it.id));else ideas.forEach(it=>ideaOpen.add(it.id));renderBoard()};
