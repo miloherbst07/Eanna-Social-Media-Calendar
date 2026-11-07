@@ -2121,13 +2121,18 @@ async function enablePush(){
   const perm=await Notification.requestPermission();
   if(perm!=="granted"){toast("Notifications are blocked. Turn them on for this site in your phone's settings, then try again.");return}
   try{
-    const reg=await navigator.serviceWorker.register("firebase-messaging-sw.js");
-    const tok=await getToken(m,{vapidKey:settings.pushKey.trim(),serviceWorkerRegistration:reg});
+    const sw=await fetch("firebase-messaging-sw.js",{method:"HEAD",cache:"no-store"}).catch(()=>null);
+    if(!sw||!sw.ok){toast("The file firebase-messaging-sw.js is missing from the site. Upload it next to index.html on GitHub.");return}
+    await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    const reg=await navigator.serviceWorker.ready;
+    let tok=null;
+    try{tok=await getToken(m,{vapidKey:settings.pushKey.trim(),serviceWorkerRegistration:reg})}
+    catch(e){await new Promise(r=>setTimeout(r,1500));tok=await getToken(m,{vapidKey:settings.pushKey.trim(),serviceWorkerRegistration:reg})}
     if(!tok)throw new Error("no token");
     setPersonCfg(pid,cfg=>{const l=(cfg.webTokens||[]).filter(t=>t&&t.t!==tok);l.push({t:tok,dev:deviceLabel(),at:Date.now()});cfg.webTokens=l.slice(-8)});
     try{localStorage.setItem(TOKEN_KEY,tok)}catch(e){}
     renderNotifyPanel();toast("Notifications are on for this "+deviceLabel());
-  }catch(e){console.error(e);toast("Couldn't turn on notifications here. Check the Web Push key in the setup box, then try again.")}
+  }catch(e){console.error(e);toast("Couldn't turn on notifications here ("+String(e&&(e.code||e.message)||e).slice(0,90)+"). Send Milo a screenshot of this.")}
 }
 async function disablePush(){
   const pid=myPid(),tok=deviceToken();
