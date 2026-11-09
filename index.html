@@ -241,6 +241,12 @@ a.inspmark:hover{text-decoration:underline}
 .board{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
 .col{flex:0 0 270px;background:color-mix(in srgb,var(--s) 8%,var(--surface-2));border:1px solid var(--line);border-top:5px solid var(--s);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:7px;min-height:160px}
 .col h3{margin:0 0 4px;display:flex;align-items:center;gap:8px;font-size:15px}
+.col h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+.col h3 .tchev{font-size:11px;color:var(--muted);transition:transform .2s ease;flex:none}
+.col:not(.shut) h3 .tchev{transform:rotate(180deg)}
+.col.shut{min-height:0}
+.col.shut h3{margin:0}
+.col.shut>:not(h3){display:none}
 .col h3 small{margin-left:auto;background:var(--s);color:var(--st,#fff);font-weight:700;font-size:12px;padding:1px 8px;border-radius:99px}
 .col .card{padding:9px 10px}
 .col .card .t .tt{white-space:normal}
@@ -688,7 +694,7 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   .pfull{display:none}
   .pab{display:inline}
   .prow input{padding:6px 5px;font-size:13px}
-  .col{flex-basis:78vw}
+  .col{flex-basis:78vw}#board.board{flex-direction:column;align-items:stretch;overflow-x:visible}#board .col{flex:none;width:auto}#board .col.addtopic{min-height:56px}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fcards{grid-template-columns:1fr}
   .brow{grid-template-columns:22px minmax(0,1fr) 64px;gap:8px}
@@ -1750,6 +1756,11 @@ function ideaBy(it){return it.by&&personById(it.by)?it.by:miloId()}
 function isFav(it){const m=myPid();return !!m&&(it.favBy||[]).includes(m)}
 function favPeople(it){return (it.favBy||[]).map(personById).filter(Boolean)}
 let ideaOpen=new Set(),ideaWho="all";
+/* Which topic columns are open (each person's own choice, kept on this device). Closed by default. */
+const TOPEN_KEY="eanna-topics-open";let topicOpen=new Set();
+try{topicOpen=new Set(JSON.parse(localStorage.getItem(TOPEN_KEY)||"[]"))}catch(e){}
+function saveTopicOpen(){try{localStorage.setItem(TOPEN_KEY,JSON.stringify([...topicOpen]))}catch(e){}}
+let syncOpenAll=()=>{};
 function toggleIdeaOpen(id){
   ideaOpen.has(id)?ideaOpen.delete(id):ideaOpen.add(id);
   document.querySelectorAll(`.card.idea[data-id="${id}"]`).forEach(el=>{const o=ideaOpen.has(id);el.classList.toggle("open",o);el.setAttribute("aria-expanded",o)});
@@ -1812,14 +1823,16 @@ function renderBoard(){
     +chip("fav:any","Anyone's",inKind.filter(it=>favOf(it,"any")).length,"#E8A317");
   $("#ideawho").querySelectorAll("[data-who]").forEach(b=>b.onclick=()=>{ideaWho=b.dataset.who;renderBoard()});
   const ideas=inKind.filter(it=>{if(ideaWho==="all")return true;const f=/^fav:(.+)$/.exec(ideaWho);return f?favOf(it,f[1]):ideaBy(it)===ideaWho});
-  const allOpen=ideas.length&&ideas.every(it=>ideaOpen.has(it.id));
-  $("#ideaexpand").textContent=allOpen?"Close all":"Open all";
-  $("#ideaexpand").onclick=()=>{if(allOpen)ideas.forEach(it=>ideaOpen.delete(it.id));else ideas.forEach(it=>ideaOpen.add(it.id));renderBoard()};
+  const tkeys=topicsList().filter(t=>t.kind===ideaView).map(t=>t.id).concat(ideas.some(it=>!ideaTopic(it))?["__none"]:[]);
+  const isAllOpen=()=>tkeys.every(k=>topicOpen.has(k))&&ideas.every(it=>ideaOpen.has(it.id));
+  syncOpenAll=()=>{$("#ideaexpand").textContent=isAllOpen()?"Close all":"Open all"};syncOpenAll();
+  $("#ideaexpand").onclick=()=>{if(isAllOpen()){ideas.forEach(it=>ideaOpen.delete(it.id));tkeys.forEach(k=>topicOpen.delete(k))}else{ideas.forEach(it=>ideaOpen.add(it.id));tkeys.forEach(k=>topicOpen.add(k))}saveTopicOpen();renderBoard()};
   const topics=topicsList().filter(t=>t.kind===ideaView);
   const sort=l=>l.sort((a,b)=>(b.updated||0)-(a.updated||0));
   const addLabel=ideaView==="music"?"+ Add song":"+ Add idea";
   const col=(t,list)=>{const c=t?t.color:"#8A90B8";
-    return `<div class="col" data-drop="${t?esc(t.id):""}" style="--s:${esc(c)};--st:${textOn(c)}"><h3>${t?`<button type="button" class="topicname" data-topic="${esc(t.id)}" title="Rename, recolour or delete this topic">${esc(t.name)}</button>`:"No topic"}<small>${list.length}</small></h3>
+    const key=t?t.id:"__none",open=topicOpen.has(key);
+    return `<div class="col${open?"":" shut"}" data-drop="${t?esc(t.id):""}" data-tkey="${esc(key)}" style="--s:${esc(c)};--st:${textOn(c)}"><h3 data-ttoggle="${esc(key)}" role="button" tabindex="0" aria-expanded="${open}">${t?`<button type="button" class="topicname" data-topic="${esc(t.id)}" title="Rename, recolour or delete this topic">${esc(t.name)}</button>`:"No topic"}<small>${list.length}</small><span class="tchev" aria-hidden="true">&#9660;</span></h3>
       ${list.map(ideaCardHTML).join("")}<button class="more" data-newtopic="${t?esc(t.id):""}">${addLabel}</button></div>`};
   let html=topics.map(t=>col(t,sort(ideas.filter(it=>ideaTopic(it)===t.id)))).join("");
   const orphans=ideas.filter(it=>!ideaTopic(it));
@@ -1830,6 +1843,10 @@ function renderBoard(){
   board.querySelectorAll("[data-newtopic]").forEach(b=>b.onclick=()=>openIdea(null,{topic:b.dataset.newtopic,ideaKind:ideaView}));
   board.querySelectorAll("[data-topic]").forEach(b=>b.onclick=e=>{e.stopPropagation();openTopic(topicById(b.dataset.topic))});
   $("#addtopiccol").onclick=()=>openTopic(null);
+  board.querySelectorAll("[data-ttoggle]").forEach(h=>{const go=()=>{const k=h.dataset.ttoggle;topicOpen.has(k)?topicOpen.delete(k):topicOpen.add(k);saveTopicOpen();
+      const o=topicOpen.has(k),col=h.closest(".col");col.classList.toggle("shut",!o);h.setAttribute("aria-expanded",o);syncOpenAll()};
+    h.onclick=e=>{if(e.target.closest(".topicname"))return;go()};
+    h.onkeydown=e=>{if(e.target!==h)return;if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}}});
   board.querySelectorAll("[data-drop]").forEach(z=>{
     z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("over")});
     z.addEventListener("dragleave",e=>{if(!z.contains(e.relatedTarget))z.classList.remove("over")});
