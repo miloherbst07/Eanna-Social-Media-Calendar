@@ -1400,7 +1400,7 @@ function startListening(){
   stopListening();
   unsubs.push(onSnapshot(accessRef,s=>{access=s.exists()?s.data():{emails:[]};renderAccess()},listenErr));
   unsubs.push(onSnapshot(settingsRef,s=>{
-    if(s.exists()){settings=normalizeSettings(s.data());if(settings._seedTopics){delete settings._seedTopics;if(!s.metadata.fromCache)persistSettings()}renderAll()}
+    if(s.exists()){settings=normalizeSettings(s.data());if(settings._seedTopics){delete settings._seedTopics;if(!s.metadata.fromCache)persistSettings()}renderAll();if(!s.metadata.fromCache)refreshPush()}
     else if(!s.metadata.fromCache){settings=clone(DEFAULT_SETTINGS);persistSettings();renderAll()}
   },listenErr));
   unsubs.push(onSnapshot(collection(fdb,"items"),s=>{
@@ -2250,6 +2250,26 @@ async function enablePush(){
     try{localStorage.setItem(TOKEN_KEY,tok)}catch(e){}
     renderNotifyPanel();toast("Notifications are on for this "+deviceLabel());
   }catch(e){console.error(e);toast("Couldn't turn on notifications here ("+String(e&&(e.code||e.message)||e).slice(0,90)+"). Send Milo a screenshot of this.")}
+}
+/* Each time the calendar opens, quietly renew this phone's notification connection.
+   Phones sometimes swap it for a new one (updates, the iPhone tidying up); this keeps the saved one current. */
+let pushChecked=false;
+async function refreshPush(){
+  if(pushChecked)return;
+  const pid=myPid(),old=deviceToken();
+  if(!pid||!old||!settings.pushKey||!window.Notification||Notification.permission!=="granted")return;
+  pushChecked=true;
+  try{
+    const m=await messagingApi();if(!m)return;
+    await navigator.serviceWorker.register("firebase-messaging-sw.js");
+    const reg=await navigator.serviceWorker.ready;try{await reg.update()}catch(e){}
+    const tok=await getToken(m,{vapidKey:settings.pushKey.trim(),serviceWorkerRegistration:reg});if(!tok)return;
+    const cfg=(settings.notify||{})[pid]||{},saved=(cfg.webTokens||[]).some(t=>t&&(t.t||t)===tok);
+    if(tok===old&&saved)return;
+    setPersonCfg(pid,c=>{const l=(c.webTokens||[]).filter(t=>t&&(t.t||t)!==tok&&(t.t||t)!==old);l.push({t:tok,dev:deviceLabel(),at:Date.now()});c.webTokens=l.slice(-8)});
+    try{localStorage.setItem(TOKEN_KEY,tok)}catch(e){}
+    renderNotifyPanel();
+  }catch(e){console.warn("Couldn't refresh notifications",e)}
 }
 async function disablePush(){
   const pid=myPid(),tok=deviceToken();
