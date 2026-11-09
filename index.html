@@ -289,6 +289,13 @@ a.inspmark:hover{text-decoration:underline}
 .idetail dl{margin:0 0 8px;display:grid;gap:4px}
 .idetail dt{font-weight:700;font-size:12px;color:var(--muted)}
 .idetail dd{margin:0 0 4px;white-space:pre-wrap}
+.idetail .isecs{display:grid;gap:6px;margin:0 0 8px}
+.idetail .isec{border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--c,#888) 6%,transparent)}
+.idetail .isec summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;font-weight:700;font-size:12.5px}
+.idetail .isec summary::-webkit-details-marker{display:none}
+.idetail .isec summary::after{content:"\25BC";font-size:10px;color:var(--muted);transition:transform .2s ease}
+.idetail .isec[open] summary::after{transform:rotate(180deg)}
+.idetail .isecv{white-space:pre-wrap;padding:0 10px 10px;line-height:1.5}
 .idetail .iacts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .idetail .iacts .btn{padding:5px 10px;font-size:12.5px}
 .idetail .iacts input[type=date]{width:auto;padding:5px 8px;font-size:12.5px}
@@ -1769,7 +1776,7 @@ function ideaCardHTML(it){
     <div class="idetail" data-own>
       ${favPeople(it).length?`<p class="favnames">&#9733; Favourited by ${esc(favPeople(it).map(x=>x.name).join(", "))}</p>`:""}
       ${it.notes?`<p class="full-notes">${esc(it.notes)}</p>`:""}
-      ${fields.length?`<dl>${fields.map(f=>`<dt>${esc(f.label||"Notes")}</dt><dd>${esc(f.value||"")}</dd>`).join("")}</dl>`:""}
+      ${fields.length?`<div class="isecs">${fields.map(f=>`<details class="isec"><summary>${esc(f.label||"Notes")}</summary><div class="isecv">${esc(f.value||"")}</div></details>`).join("")}</div>`:""}
       ${!it.notes&&!fields.length?'<p class="hint" style="margin:0 0 8px">No notes yet. Tap Edit to add some.</p>':""}
       <div class="iacts">
         <button type="button" class="btn fav${fav?" on":""}" data-fav="${it.id}">${fav?"&#9733; Favourite":"&#9734; Favourite"}</button>
@@ -2272,12 +2279,12 @@ function renderNotifyPanel(){
     html+=`<h4 style="margin:18px 0 0">Tell me when</h4>
       <div class="toggles2">${NOTIFY_EVENTS.map(([k,l])=>`<label><input type="checkbox" data-nev="${k}" ${(on[k]!==undefined?on[k]:(k==="dm"||k==="mention"))?"checked":""}>${esc(l)}</label>`).join("")}</div>
       <p class="sub" style="margin:0">You never get notified about things you do yourself.</p>
-      <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">Want them instantly? Use the free ntfy app as well</summary><div style="margin-top:10px">${cfg&&cfg.topic?`
+      <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">${settings.pushWorker?"Backup option: the free ntfy app (not needed)":"Want them instantly? Use the free ntfy app as well"}</summary><div style="margin-top:10px">${cfg&&cfg.topic?`
         <div class="step"><b class="n">1</b><span>Get <strong>ntfy</strong>: <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a></span></div>
         <div class="step"><b class="n">2</b><span>Tap <strong>+</strong> and subscribe to your private channel:<br><code>${esc(cfg.topic)}</code> <button class="btn" id="ncopy" style="padding:4px 10px;font-size:13px">Copy</button></span></div>
         <div class="step"><b class="n">3</b><span><button class="btn" id="ntest">Send me a test</button></span></div>
         <p class="sub">Keep your channel name to yourself. Messages go through ntfy.sh, a free public service.</p><button class="btn danger" id="noff">Stop using ntfy</button>`
-        :`<p class="sub" style="margin:0 0 8px">ntfy pings your phone the moment something happens, instead of every few minutes. It needs the free ntfy app.</p><button class="btn" id="nsetup">Set up ntfy</button>`}</div></details>`;
+        :`<p class="sub" style="margin:0 0 8px">${settings.pushWorker?"You don't need this: notifications from the calendar already arrive in seconds. ntfy is only a backup if they ever stop working. It needs the free ntfy app.":"ntfy pings your phone the moment something happens, instead of every few minutes. It needs the free ntfy app."}</p><button class="btn" id="nsetup">Set up ntfy</button>`}</div></details>`;
   }
   html+=`<details style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"${settings.pushKey?"":" open"}><summary style="cursor:pointer;font-weight:600">One-off setup (Milo)</summary>
     <p class="sub" style="margin:8px 0">In Firebase, open <strong>Project settings › Cloud Messaging</strong>. Under <strong>Web Push certificates</strong>, tap <strong>Generate key pair</strong> and paste the key here. It's a public key, so it's safe to share with the team.</p>
