@@ -354,6 +354,41 @@ details.fpast>summary{cursor:pointer;font-weight:700;padding:6px 0;color:var(--m
 .msg.mine .mention{color:#FFD2B8}
 .msg.hasme{box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 60%,transparent)}
 .composer{position:relative}
+.composer .attach{flex:none;padding:0;width:44px;height:42px;font-size:19px;display:grid;place-items:center}
+.chatpend{display:flex;gap:8px;padding:8px 10px 0;border-top:1px solid var(--line);background:var(--surface-2);overflow-x:auto}
+.chatpend[hidden]{display:none}
+.chatpend .pthumb{position:relative;flex:none}
+.chatpend .pthumb img{height:64px;width:auto;max-width:120px;object-fit:cover;border-radius:8px;display:block;border:1px solid var(--line)}
+.chatpend .pthumb button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:12px;line-height:1;padding:0;cursor:pointer}
+.msg .mimgs{display:grid;gap:4px;margin:4px 0 2px}
+.msg .mimg{display:block;border:0;padding:0;margin:0;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:10px;overflow:hidden;cursor:zoom-in;width:min(260px,62vw);max-height:340px}
+.msg .mimg img{display:block;width:100%;height:100%;object-fit:cover}
+.msg .mimg img:not([src]){visibility:hidden}
+.msg.hasreact{margin-bottom:14px}
+.msg .mreacts{position:absolute;bottom:-15px;left:10px;display:flex;gap:3px;flex-wrap:wrap}
+.msg.mine .mreacts{left:auto;right:10px}
+.rchip{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:99px;padding:1px 7px;font-size:13px;line-height:1.5;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.rchip b{font-size:11px;font-weight:700}
+.rchip.on{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,var(--surface))}
+.msg .mreact{display:none;position:absolute;top:50%;transform:translateY(-50%);right:-34px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font-size:15px;line-height:1;padding:0;cursor:pointer}
+.msg.mine .mreact{right:auto;left:-34px}
+.msg:hover .mreact,.msg:focus-within .mreact{display:block}
+@media (pointer:coarse){.msg,.msg img{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.msg .mreact,.msg.mine:hover .mdel{display:none}}
+.reactbar{position:fixed;z-index:60;background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;box-shadow:0 10px 30px rgba(12,10,50,.28);padding:6px;max-width:min(340px,calc(100vw - 16px))}
+.reactbar[hidden]{display:none}
+.reactbar .rq{display:flex;gap:2px;align-items:center}
+.reactbar .rq button,.reactbar .rmore button{border:0;background:none;font-size:24px;line-height:1;padding:6px;border-radius:10px;cursor:pointer}
+.reactbar .rq button:hover,.reactbar .rmore button:hover,.reactbar button.on{background:color-mix(in srgb,var(--orange) 16%,transparent)}
+.reactbar .rq .rplus{font-size:18px;font-weight:700;color:var(--muted);width:36px;height:36px}
+.reactbar .rmore{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin-top:4px;border-top:1px solid var(--line);padding-top:4px}
+.reactbar .rmore button{font-size:21px;padding:5px 0}
+.reactbar .rwho{font-size:12.5px;color:var(--muted);padding:6px 6px 2px;border-top:1px solid var(--line);margin-top:4px}
+.reactbar .racts{display:flex;gap:6px;padding:6px 4px 2px;border-top:1px solid var(--line);margin-top:4px}
+.reactbar .racts .btn{padding:5px 12px;font-size:13px}
+.imgview{position:fixed;inset:0;z-index:70;background:rgba(6,5,25,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 16px) 12px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.imgview[hidden]{display:none}
+.imgview img{max-width:100%;max-height:calc(100% - 70px);object-fit:contain;border-radius:8px}
+.imgview .ivbar{display:flex;gap:10px}
 .mentionbox{position:absolute;left:10px;bottom:calc(100% + 4px);background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);padding:4px;min-width:180px;z-index:5}
 .mentionbox[hidden]{display:none}
 .mentionbox button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;text-align:left;padding:7px 10px;border-radius:7px;font-weight:600;font-size:14px;color:var(--ink)}
@@ -806,11 +841,12 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
 
   <!-- Chat -->
   <section class="view" id="view-chat">
-    <div class="page-head"><h2>Chat</h2><span class="hint" id="chathint">The team chat, plus a private chat with each person. Type @ to mention someone.</span></div>
+    <div class="page-head"><h2>Chat</h2><span class="hint" id="chathint">The team chat, plus a private chat with each person. Type @ to mention someone, tap &#128247; to send a photo, and hold a message to react.</span></div>
     <div class="chat">
       <div class="chatnav" id="chatnav" role="group" aria-label="Conversations"></div>
       <div class="msgs" id="msgs" aria-live="polite"></div>
-      <div class="composer"><div class="mentionbox" id="mentionbox" role="listbox" hidden></div><textarea id="chatin" rows="1" placeholder="Write a message" aria-label="Message"></textarea><button class="btn primary" id="chatsend">Send</button></div>
+      <div class="chatpend" id="chatpend" hidden></div>
+      <div class="composer"><div class="mentionbox" id="mentionbox" role="listbox" hidden></div><button type="button" class="btn attach" id="chatphoto" aria-label="Add a photo" title="Add a photo">&#128247;</button><input type="file" id="chatfile" accept="image/*" multiple hidden><textarea id="chatin" rows="1" placeholder="Write a message" aria-label="Message"></textarea><button class="btn primary" id="chatsend">Send</button></div>
     </div>
   </section>
 
@@ -1137,13 +1173,15 @@ tr.sel td{background:color-mix(in srgb,var(--orange) 8%,var(--surface))}
   </div>
 </div>
 
+<div class="imgview" id="imgview" hidden><img id="imgviewimg" alt="Photo"><div class="ivbar"><a class="btn" id="imgsave" download="eanna-photo.jpg">Save</a><button type="button" class="btn primary" id="imgclose">Close</button></div></div>
+<div class="reactbar" id="reactbar" hidden role="dialog" aria-label="React to this message"></div>
 <div class="toast" id="toast"></div>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteField, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 (function(){
 "use strict";
@@ -2114,7 +2152,7 @@ function renderChat(){
   // pop-up for new messages while elsewhere
   const newest=all[all.length-1];
   if(lastMsgId!==null&&newest&&newest.id!==lastMsgId&&(newest.at||0)>CHAT_START&&!isMine(newest)&&!(open&&convOf(newest)===chatWith))
-    toast(`${msgName(newest)}${convOf(newest)?" (private)":""}: ${String(newest.text||"").slice(0,80)}`);
+    toast(`${msgName(newest)}${convOf(newest)?" (private)":""}: ${msgPreview(newest).slice(0,80)}`);
   lastMsgId=newest?newest.id:"";
   const near=box.scrollHeight-box.scrollTop-box.clientHeight<80;
   let html=withP?`<div class="chatnote">&#128274; Only you and ${esc(withP.name)} see this chat.</div>`:"",lastDay="";
@@ -2122,26 +2160,149 @@ function renderChat(){
     const d=new Date(m.at||0),day=ymd(d);
     if(day!==lastDay){html+=`<div class="daysep">${day===todayStr()?"Today":esc(longDate(day))}</div>`;lastDay=day}
     const own=isMine(m),tm=d.toLocaleTimeString("en-IE",{hour:"2-digit",minute:"2-digit"}),hasMe=!own&&mine&&(m.mentions||[]).includes(mine);
-    html+=`<div class="msg${own?" mine":""}${hasMe?" hasme":""}">${own?"":`<span class="mwho">${esc(msgName(m))}</span>`}<span class="mtext">${renderText(m)}</span><span class="mtime">${tm}</span>${own?`<button class="mdel" data-mdel="${m.id}" aria-label="Delete this message">&#10005;</button>`:""}</div>`;
+    const rx=reactsHTML(m);
+    html+=`<div class="msg${own?" mine":""}${hasMe?" hasme":""}${rx?" hasreact":""}" data-mid="${m.id}">${own?"":`<span class="mwho">${esc(msgName(m))}</span>`}${imgsHTML(m)}${m.text?`<span class="mtext">${renderText(m)}</span>`:""}<span class="mtime">${tm}</span>${own?`<button class="mdel" data-mdel="${m.id}" aria-label="Delete this message">&#10005;</button>`:""}<button type="button" class="mreact" data-mreact="${m.id}" aria-label="React to this message" title="React">&#9786;</button>${rx}</div>`;
   });
   box.innerHTML=html+(list.length?"":`<div class="chatempty">${withP?`No messages with ${esc(withP.name)} yet.`:"No messages yet. Say hello to the team."}</div>`);
   box.querySelectorAll("[data-mdel]").forEach(b=>b.onclick=async()=>{const m=recs.msg[b.dataset.mdel];if(!m)return;
-    if(!await askConfirm(m.to?"This message will be deleted for both of you.":"This message will be deleted for everyone.","Delete"))return;removeRec(m);renderChat()});
-  if(near||(open&&!chatWasOpen))box.scrollTop=box.scrollHeight;
+    deleteMsg(m)});
+  box.querySelectorAll("[data-mreact]").forEach(b=>b.onclick=e=>{e.stopPropagation();openReactBar(b.dataset.mreact)});
+  box.querySelectorAll("[data-rchip]").forEach(b=>b.onclick=e=>{e.stopPropagation();setReact(b.dataset.rchip,b.dataset.e)});
+  box.querySelectorAll("img[data-imgid]").forEach(im=>{loadImg(im.dataset.imgid).then(d=>{if(d){im.src=d;if(stick)box.scrollTop=box.scrollHeight}})});
+  const stick=near||(open&&!chatWasOpen);
+  if(stick)box.scrollTop=box.scrollHeight;
   chatWasOpen=open;
 }
-function sendChat(){
-  const inp=$("#chatin"),text=inp.value.trim();if(!text)return;
+async function sendChat(){
+  const inp=$("#chatin"),text=inp.value.trim(),photos=pendingImgs.slice();if(!text&&!photos.length)return;
   const mine=myPid();
   if(chatWith&&!mine){toast("Pick your name in Settings first.");return}
-  const m={id:uid("msg"),kind:"msg",text:text.slice(0,2000),by:mine,name:myName(),email:me&&me.email?me.email.toLowerCase():"",at:Date.now()};
-  if(chatWith)m.to=dmKey(mine,chatWith);else m.mentions=mentionsIn(text).filter(id=>id!==mine);
-  persistRec(m);inp.value="";inp.style.height="";hideMentions();renderChat();$("#msgs").scrollTop=$("#msgs").scrollHeight;
-  if(chatWith){notifyPeople("dm",`${myName()} sent you a private message`,text,[chatWith]);return}
-  const men=m.mentions||[];
-  if(men.length)notifyPeople("mention",`${myName()} mentioned you in the team chat`,text,men);
-  notifyPeople("msg",`${myName()} in the team chat`,text,settings.people.map(p=>p.id).filter(id=>!men.includes(id)));
+  if(sending)return;sending=true;$("#chatsend").disabled=true;
+  const base=()=>{const m={id:uid("msg"),kind:"msg",text:"",by:mine,name:myName(),email:me&&me.email?me.email.toLowerCase():"",at:Date.now()};
+    if(chatWith)m.to=dmKey(mine,chatWith);return m};
+  const sent=[];
+  try{
+    if(photos.length&&photos.length>1)toast(`Sending ${photos.length} photos…`);else if(photos.length)toast("Sending photo…");
+    for(let i=0;i<photos.length;i++){
+      const m=base();m.at=Date.now()+i;m.imgs=[await storeImg(photos[i],m)];
+      if(i===photos.length-1&&text)m.text=text.slice(0,2000);
+      sent.push(m);persistRec(m);
+    }
+    if(!photos.length){const m=base();m.text=text.slice(0,2000);sent.push(m);persistRec(m)}
+  }catch(e){console.error(e);toast("Couldn't send that photo. Try again.")}
+  finally{sending=false;$("#chatsend").disabled=false}
+  if(!sent.length)return;
+  if(!chatWith){const men=mentionsIn(text).filter(id=>id!==mine);if(men.length){const last=sent[sent.length-1];last.mentions=men;persistRec(last)}}
+  pendingImgs=[];renderPending();inp.value="";inp.style.height="";hideMentions();renderChat();$("#msgs").scrollTop=$("#msgs").scrollHeight;
+  const body=text||(photos.length>1?`📷 ${photos.length} photos`:"📷 Photo");
+  if(chatWith){notifyPeople("dm",`${myName()} sent you a private message`,body,[chatWith]);return}
+  const men=(sent[sent.length-1].mentions)||[];
+  if(men.length)notifyPeople("mention",`${myName()} mentioned you in the team chat`,body,men);
+  notifyPeople("msg",`${myName()} in the team chat`,body,settings.people.map(p=>p.id).filter(id=>!men.includes(id)));
 }
+/* ---------- Chat photos ----------
+   Photos are shrunk on the phone (max 1280px, JPEG, under about 280KB) and kept in the free Firestore database:
+   in a separate "chatimg" store when the database allows it, otherwise inside the message itself. */
+let pendingImgs=[],sending=false,imgStoreOk=false;/* the database only allows the items list, so photos go inside the message */const imgCache=new Map();
+function msgPreview(m){return m.text||((m.imgs||[]).length?"📷 Photo":"")}
+function imgsHTML(m){
+  const l=(m.imgs||[]).filter(Boolean);if(!l.length)return "";
+  return `<div class="mimgs">${l.map((im,i)=>{const src=im.data||imgCache.get(im.id)||"";
+    return `<button type="button" class="mimg" data-imgopen="${m.id}:${i}" style="aspect-ratio:${+im.w||4}/${+im.h||3}" aria-label="Open photo"><img alt="Photo from ${esc(msgName(m))}" ${src?`src="${src}"`:`data-imgid="${esc(im.id||"")}"`}></button>`}).join("")}</div>`;
+}
+async function loadImg(id){
+  if(!id)return "";if(imgCache.has(id))return imgCache.get(id);
+  try{const s=await getDoc(doc(fdb,"chatimg",id));const d=s.exists()?(s.data().data||""):"";if(d)imgCache.set(id,d);return d}catch(e){return ""}
+}
+function withTimeout(pr,ms){return Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))])}
+async function storeImg(ph,m){
+  if(imgStoreOk){
+    const id=uid("img");
+    try{await withTimeout(setDoc(doc(fdb,"chatimg",id),{data:ph.data,w:ph.w,h:ph.h,by:m.by||"",to:m.to||"",at:m.at}),15000);imgCache.set(id,ph.data);return {id,w:ph.w,h:ph.h}}
+    catch(e){if(String(e&&e.code||"").includes("permission"))imgStoreOk=false}
+  }
+  return {data:ph.data,w:ph.w,h:ph.h};
+}
+async function shrinkImage(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error("not an image"));i.src=url});
+    let max=1280,q=.8,out="",w=0,h=0;
+    for(let k=0;k<8;k++){
+      const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));w=Math.max(1,Math.round(img.naturalWidth*sc));h=Math.max(1,Math.round(img.naturalHeight*sc));
+      const c=document.createElement("canvas");c.width=w;c.height=h;const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
+      out=c.toDataURL("image/jpeg",q);if(out.length<380000)break;
+      if(q>.6)q-=.1;else max=Math.round(max*.8);
+    }
+    return {data:out,w,h};
+  }finally{URL.revokeObjectURL(url)}
+}
+async function addPhotos(files){
+  const l=[...files].filter(f=>/^image\//.test(f.type)||/\.(heic|heif|jpe?g|png|webp|gif)$/i.test(f.name||""));if(!l.length)return;
+  if(pendingImgs.length+l.length>10){toast("Up to 10 photos at a time.");l.length=Math.max(0,10-pendingImgs.length)}
+  for(const f of l){try{pendingImgs.push(await shrinkImage(f))}catch(e){toast("Couldn't open one of those photos.")}}
+  renderPending();if(!TOUCH)$("#chatin").focus();
+}
+function renderPending(){
+  const box=$("#chatpend");box.hidden=!pendingImgs.length;
+  box.innerHTML=pendingImgs.map((p,i)=>`<div class="pthumb"><img src="${p.data}" alt="Photo to send"><button type="button" data-unpend="${i}" aria-label="Remove this photo">&#10005;</button></div>`).join("");
+  box.querySelectorAll("[data-unpend]").forEach(b=>b.onclick=()=>{pendingImgs.splice(+b.dataset.unpend,1);renderPending()});
+  $("#chatin").placeholder=pendingImgs.length?"Add a caption (optional)":(personById(chatWith)?`Private message to ${personById(chatWith).name}`:"Message the team. Type @ to mention someone");
+}
+async function openImage(mid,i){
+  const m=recs.msg[mid];if(!m)return;const im=(m.imgs||[])[+i];if(!im)return;
+  const d=im.data||await loadImg(im.id);if(!d){toast("Couldn't load that photo.");return}
+  $("#imgviewimg").src=d;$("#imgsave").href=d;$("#imgview").hidden=false;
+}
+function closeImage(){$("#imgview").hidden=true;$("#imgviewimg").removeAttribute("src")}
+async function deleteMsg(m){
+  closeReactBar();
+  if(!await askConfirm(m.to?"This message will be deleted for both of you.":"This message will be deleted for everyone.","Delete"))return;
+  (m.imgs||[]).forEach(im=>{if(im&&im.id)deleteDoc(doc(fdb,"chatimg",im.id)).catch(()=>{})});
+  removeRec(m);renderChat();
+}
+/* ---------- Reactions (one emoji per person per message, like WhatsApp) ---------- */
+const QUICK_REACTS=["❤️","😂","😮","😢","🔥","👍"];
+const MORE_REACTS=["👏","🙌","💯","🏀","🎉","😍","🤣","😅","😭","😡","🤯","🥶","😎","🤝","💪","🙏","👀","✅","❌","⚡","🐐","🤔","🫡","💀"];
+function reactsHTML(m){
+  const g={},mine=myPid();
+  Object.entries(m.reacts||{}).forEach(([pid,e])=>{if(e&&personById(pid))(g[e]=g[e]||[]).push(pid)});
+  const keys=Object.keys(g);if(!keys.length)return "";
+  return `<div class="mreacts">${keys.map(e=>`<button type="button" class="rchip${g[e].includes(mine)?" on":""}" data-rchip="${m.id}" data-e="${esc(e)}" title="${esc(g[e].map(p=>personById(p).name).join(", "))}" aria-label="${esc(e)} from ${esc(g[e].map(p=>personById(p).name).join(", "))}">${e}${g[e].length>1?` <b>${g[e].length}</b>`:""}</button>`).join("")}</div>`;
+}
+function setReact(mid,e){
+  const m=recs.msg[mid],pid=myPid();if(!m)return;
+  if(!pid){toast("Pick your name in Settings first, so we know who reacted.");return}
+  const cur=(m.reacts||{})[pid],next=cur===e?"":e;
+  const r=Object.assign({},m.reacts||{});if(next)r[pid]=next;else delete r[pid];
+  recs.msg[mid]=Object.assign({},m,{reacts:r});
+  updateDoc(doc(fdb,"items",mid),{["reacts."+pid]:next||deleteField()}).catch(fail);
+  closeReactBar();renderChat();
+  if(next&&m.by&&m.by!==pid)notifyPeople("react",`${myName()} reacted ${next} to your message`,msgPreview(m)||"Your message",[m.by]);
+}
+let reactFor="";
+function openReactBar(mid){
+  const m=recs.msg[mid],el=document.querySelector(`.msg[data-mid="${CSS.escape(mid)}"]`);if(!m||!el)return;
+  reactFor=mid;const mine=(m.reacts||{})[myPid()]||"",bar=$("#reactbar");
+  const who=Object.entries(m.reacts||{}).filter(([p,e])=>e&&personById(p)).map(([p,e])=>`${e} ${esc(personById(p).name)}`).join(" · ");
+  bar.innerHTML=`<div class="rq">${QUICK_REACTS.map(e=>`<button type="button" data-re="${e}" class="${e===mine?"on":""}" aria-label="React ${e}">${e}</button>`).join("")}<button type="button" class="rplus" id="rplus" aria-label="More emoji" aria-expanded="false">+</button></div>
+    <div class="rmore" id="rmore" hidden>${MORE_REACTS.map(e=>`<button type="button" data-re="${e}" class="${e===mine?"on":""}" aria-label="React ${e}">${e}</button>`).join("")}</div>
+    ${who?`<div class="rwho">${who}</div>`:""}
+    <div class="racts">${m.text?`<button type="button" class="btn" id="rcopy">Copy</button>`:""}${isMine(m)?`<button type="button" class="btn danger" id="rdel">Delete</button>`:""}</div>`;
+  if(!bar.querySelector(".racts button"))bar.querySelector(".racts").remove();
+  bar.querySelectorAll("[data-re]").forEach(b=>b.onclick=()=>setReact(mid,b.dataset.re));
+  $("#rplus").onclick=()=>{const mo=$("#rmore");mo.hidden=!mo.hidden;$("#rplus").setAttribute("aria-expanded",!mo.hidden);placeBar(el)};
+  if($("#rcopy"))$("#rcopy").onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(m.text):Promise.reject()).then(()=>toast("Copied")).catch(()=>toast("Couldn't copy"));closeReactBar()};
+  if($("#rdel"))$("#rdel").onclick=()=>deleteMsg(m);
+  bar.hidden=false;placeBar(el);
+}
+function placeBar(el){
+  const bar=$("#reactbar"),r=el.getBoundingClientRect(),bw=bar.offsetWidth,bh=bar.offsetHeight,vw=window.innerWidth,vh=window.innerHeight;
+  let left=isMine(recs.msg[reactFor]||{})?r.right-bw:r.left;left=Math.max(8,Math.min(left,vw-bw-8));
+  let top=r.top-bh-8;if(top<8)top=Math.min(r.bottom+8,vh-bh-8);
+  bar.style.left=left+"px";bar.style.top=Math.max(8,top)+"px";
+}
+function closeReactBar(){const bar=$("#reactbar");if(bar)bar.hidden=true;reactFor=""}
 /* @mention picker */
 let menSel=0,menList=[];
 function hideMentions(){$("#mentionbox").hidden=true;menList=[]}
@@ -2161,6 +2322,34 @@ function pickMention(p){
   t.value=before+after;t.focus();t.selectionStart=t.selectionEnd=before.length;hideMentions();
 }
 $("#chatsend").onclick=sendChat;
+$("#chatphoto").onclick=()=>$("#chatfile").click();
+$("#chatfile").onchange=e=>{const f=e.target.files;if(f&&f.length)addPhotos(f).finally(()=>{e.target.value=""})};
+$("#chatin").addEventListener("paste",e=>{const f=[...(e.clipboardData&&e.clipboardData.files||[])];if(f.length){e.preventDefault();addPhotos(f)}});
+$("#imgclose").onclick=closeImage;$("#imgview").addEventListener("click",e=>{if(e.target.id==="imgview"||e.target.id==="imgviewimg")closeImage()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("#imgview").hidden)closeImage();closeReactBar()}});
+document.addEventListener("pointerdown",e=>{const bar=$("#reactbar");if(!bar.hidden&&!bar.contains(e.target)&&!e.target.closest("[data-mreact]"))closeReactBar()},true);
+$("#msgs").addEventListener("scroll",closeReactBar,{passive:true});
+/* Tap a photo to open it; hold a message to react (or double-tap for ❤️); on a computer, hover and press ☺ */
+(()=>{
+  const box=$("#msgs");let timer=0,sx=0,sy=0,held=false,lastTap={id:"",t:0};
+  const skip=t=>t.closest("a,.rchip,.mdel,.mreact,input,textarea");
+  box.addEventListener("click",e=>{const b=e.target.closest("[data-imgopen]");if(b&&!held){const [mid,i]=b.dataset.imgopen.split(":");openImage(mid,i)}});
+  box.addEventListener("pointerdown",e=>{
+    const el=e.target.closest(".msg");if(!el||skip(e.target)||e.button>0)return;
+    held=false;sx=e.clientX;sy=e.clientY;clearTimeout(timer);
+    timer=setTimeout(()=>{held=true;if(navigator.vibrate)try{navigator.vibrate(12)}catch(x){}openReactBar(el.dataset.mid)},450);
+  });
+  const cancel=()=>clearTimeout(timer);
+  box.addEventListener("pointermove",e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()});
+  box.addEventListener("pointercancel",cancel);
+  box.addEventListener("pointerup",e=>{
+    cancel();const el=e.target.closest(".msg");if(!el||held||skip(e.target))return;
+    const now=Date.now();
+    if(lastTap.id===el.dataset.mid&&now-lastTap.t<320){lastTap={id:"",t:0};const m=recs.msg[el.dataset.mid];if(m&&(m.reacts||{})[myPid()]!=="❤️")setReact(el.dataset.mid,"❤️");return}
+    lastTap={id:el.dataset.mid,t:now};
+  });
+  box.addEventListener("contextmenu",e=>{if(e.target.closest(".msg")&&TOUCH)e.preventDefault()});
+})();
 $("#chatin").addEventListener("keydown",e=>{
   if(menList.length&&!$("#mentionbox").hidden){
     if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();menSel=(menSel+(e.key==="ArrowDown"?1:-1)+menList.length)%menList.length;showMentions();return}
@@ -2174,7 +2363,7 @@ $("#chatin").addEventListener("blur",()=>setTimeout(hideMentions,150));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)renderChat()});
 
 /* ---------- Notifications (sent to each person's phone through the free ntfy app) ---------- */
-const NOTIFY_EVENTS=[["dm","Someone sends you a private message","envelope"],["mention","Someone @mentions you in the team chat","bell"],["calendar","A post is added to the calendar","calendar"],["idea","Someone adds a new idea","bulb"],["msg","A new chat message","speech_balloon"],["filming","An idea is added to a filming day","movie_camera"],["task","Someone gives you a task","white_check_mark"],["approval","Something is sent for approval","eyes"],["shoot","A shot video is logged","video_camera"]];
+const NOTIFY_EVENTS=[["dm","Someone sends you a private message","envelope"],["mention","Someone @mentions you in the team chat","bell"],["react","Someone reacts to your message","heart"],["calendar","A post is added to the calendar","calendar"],["idea","Someone adds a new idea","bulb"],["msg","A new chat message","speech_balloon"],["filming","An idea is added to a filming day","movie_camera"],["task","Someone gives you a task","white_check_mark"],["approval","Something is sent for approval","eyes"],["shoot","A shot video is logged","video_camera"]];
 function pushTo(topic,title,message,tag){
   return fetch("https://ntfy.sh/",{method:"POST",body:JSON.stringify({topic,title,message:String(message||"").slice(0,300),click:location.href.split("#")[0],tags:tag?[tag]:[]})});
 }
@@ -2190,7 +2379,7 @@ function notify(ev,title,message,onlyPid){
   }catch(e){}
 }
 /* Send to particular people, using their own on/off choices (new kinds default to on) */
-function wants(pid,ev){const on=((settings.notify||{})[pid]||{}).on||{};return on[ev]!==undefined?!!on[ev]:(ev==="dm"||ev==="mention")}
+function wants(pid,ev){const on=((settings.notify||{})[pid]||{}).on||{};return on[ev]!==undefined?!!on[ev]:(ev==="dm"||ev==="mention"||ev==="react")}
 function notifyPeople(ev,title,message,pids){
   try{
     const mine=myPid(),tag=(NOTIFY_EVENTS.find(e=>e[0]===ev)||[])[2];
@@ -2314,7 +2503,7 @@ function renderNotifyPanel(){
     else html+=`<p class="sub" style="margin:0 0 10px">Get a notification on this device when something happens, even when the calendar is closed. No app needed.</p><button class="btn primary" id="won">Allow notifications</button>`;
     if(devs.length)html+=`<p class="sub" style="margin:10px 0 0">On for ${devs.length} device${devs.length>1?"s":""}: ${devs.map(d=>esc(d.dev||"Device")).join(", ")}.</p>`;
     html+=`<h4 style="margin:18px 0 0">Tell me when</h4>
-      <div class="toggles2">${NOTIFY_EVENTS.map(([k,l])=>`<label><input type="checkbox" data-nev="${k}" ${(on[k]!==undefined?on[k]:(k==="dm"||k==="mention"))?"checked":""}>${esc(l)}</label>`).join("")}</div>
+      <div class="toggles2">${NOTIFY_EVENTS.map(([k,l])=>`<label><input type="checkbox" data-nev="${k}" ${(on[k]!==undefined?on[k]:(k==="dm"||k==="mention"||k==="react"))?"checked":""}>${esc(l)}</label>`).join("")}</div>
       <p class="sub" style="margin:0">You never get notified about things you do yourself.</p>
       <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:600">${settings.pushWorker?"Backup option: the free ntfy app (not needed)":"Want them instantly? Use the free ntfy app as well"}</summary><div style="margin-top:10px">${cfg&&cfg.topic?`
         <div class="step"><b class="n">1</b><span>Get <strong>ntfy</strong>: <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a></span></div>
