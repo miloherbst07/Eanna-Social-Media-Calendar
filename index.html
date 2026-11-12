@@ -425,12 +425,14 @@ details.fpast>summary{cursor:pointer;font-weight:700;padding:6px 0;color:var(--m
 .statbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
 .statbar select{width:auto}
 .statbar input[type=date]{width:auto}
-.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:6px 0 18px}
+.tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:6px 0 18px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
 .tile b{display:block;font-family:var(--display);font-weight:700;font-size:30px;line-height:1.05}
 .tile span{color:var(--muted);font-size:13px;font-weight:600}
 .tile.views{border-top:4px solid var(--orange)}
 .tile.posts{border-top:4px solid var(--navy)}
+.tile.avg{border-top:4px solid var(--burnt)}
+.tile small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
 .block{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
 .block-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px}
 .block-head h3{margin:0;font-size:18px}
@@ -2941,7 +2943,8 @@ function renderStats(){
 
   const list=statItems();const tot=sumOf(list);
   $("#tiles").innerHTML=[["posts","Posts"],["views","Views"],["saves","Saves"],["shares","Shares"],["follows","Follows"]]
-    .map(([k,l])=>`<div class="tile ${k}"><b>${fmt(tot[k])}</b><span>${l}</span></div>`).join("");
+    .map(([k,l])=>`<div class="tile ${k}"><b>${fmt(tot[k])}</b><span>${l}</span></div>`).join("")
+    +`<div class="tile avg" title="Views divided by the posts that have views added, for the period, platform and categories picked above"><b>${avgViews(tot)}</b><span>Avg views per reel</span>${tot.logged?`<small>from ${fmt(tot.logged)} post${tot.logged===1?"":"s"} with views</small>`:""}</div>`;
   renderFollowers();
   renderAudience();
   renderBest(list);
